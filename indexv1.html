@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Ultimate 2026</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .hidden { display: none; }
+        .card { border-radius: 12px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .sidebar-btn { width: 100%; text-align: left; padding: 15px; border: none; background: none; border-bottom: 1px solid #eee; transition: 0.2s; }
+        .sidebar-btn:hover { background: #eef2f7; color: #0d6efd; }
+        .order-row { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #0d6efd; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <div id="login-box" class="row justify-content-center mt-5">
+        <div class="col-md-4 card p-4 text-center border-top border-primary border-4">
+            <h3 class="fw-bold text-primary mb-4">POS MASTER</h3>
+            <input type="text" id="u" class="form-control mb-2" placeholder="Tên đăng nhập">
+            <input type="password" id="p" class="form-control mb-4" placeholder="Mật khẩu">
+            <button onclick="login()" class="btn btn-primary w-100 fw-bold py-2">ĐĂNG NHẬP</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden">
+        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <span>👤: <b id="u-display"></b></span>
+            <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Thoát</button>
+        </header>
+
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm overflow-hidden">
+                    <button class="sidebar-btn" onclick="showTab('ban-hang')">🛍️ Bán Hàng</button>
+                    <button class="sidebar-btn" onclick="showTab('nhap-hang')">📦 Nhập Kho</button>
+                    <button class="sidebar-btn text-danger" onclick="showTab('tra-hang')">↩️ Trả Hàng</button>
+                    <button class="sidebar-btn" onclick="showTab('lich-su')">📜 Nhật Ký</button>
+                    <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="showTab('loi-nhuan')">📊 Tài Chính (Admin)</button>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div id="content" class="card p-4 min-vh-50"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "DÁN_URL_WEB_APP_CỦA_BẠN_VÀO_ĐÂY";
+    let currentUser = "", currentRole = "", productList = [];
+
+    async function login() {
+        const u = document.getElementById('u').value, p = document.getElementById('p').value;
+        Swal.showLoading();
+        const res = await fetch(`${SCRIPT_URL}?action=login`, { method: 'POST', body: JSON.stringify({u, p}) }).then(r => r.json());
+        Swal.close();
+        if(res.status === 'success') {
+            currentUser = u; currentRole = res.role;
+            document.getElementById('login-box').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('u-display').innerText = u;
+            if(res.role === 'admin') document.getElementById('admin-btn').classList.remove('hidden');
+            await loadProducts();
+        } else { Swal.fire('Lỗi', 'Sai thông tin đăng nhập!', 'error'); }
+    }
+
+    async function loadProducts() { productList = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json()); }
+
+    function showTab(name) {
+        if(['ban-hang', 'nhap-hang', 'tra-hang'].includes(name)) {
+            let type = name === 'ban-hang' ? "Bán hàng" : (name === 'nhap-hang' ? "Nhập hàng" : "Khách trả hàng");
+            document.getElementById('content').innerHTML = `<h4>${type}</h4>
+                <div id="items-list"></div>
+                <button onclick="addRow()" class="btn btn-outline-primary btn-sm mb-3">+ Thêm Món</button>
+                <div class="p-3 bg-light rounded">
+                    <div class="mb-3">
+                        <label class="fw-bold d-block mb-2">Hình thức thanh toán:</label>
+                        <div class="btn-group w-100">
+                            <input type="radio" class="btn-check" name="method" id="m1" value="Tiền mặt" checked>
+                            <label class="btn btn-outline-secondary" for="m1">💵 Tiền mặt</label>
+                            <input type="radio" class="btn-check" name="method" id="m2" value="Chuyển khoản">
+                            <label class="btn btn-outline-secondary" for="m2">🏦 Bank</label>
+                        </div>
+                    </div>
+                    <h5 class="text-end">Tổng cộng: <span id="total-bill" class="text-danger fw-bold">0</span> đ</h5>
+                    <button onclick="sendOrder('${type}')" class="btn btn-primary w-100 btn-lg mt-2 fw-bold">XÁC NHẬN LƯU</button>
+                </div>`;
+            addRow();
+        } else if(name === 'lich-su') { loadHistory(); }
+        else if(name === 'loi-nhuan') { loadFinanceReport(); }
+    }
+
+    function addRow() {
+        const id = Date.now();
+        const row = `<div class="order-row row g-2" id="row-${id}">
+            <div class="col-6"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control" placeholder="Tên sp..."></div>
+            <div class="col-2"><input type="number" id="q-${id}" onchange="calcTotal()" class="form-control text-center" value="1" min="1"></div>
+            <div class="col-3 text-end"><b id="p-${id}">0</b> <div class="text-muted small" id="s-${id}"></div></div>
+            <div class="col-1 text-center"><button onclick="this.parentElement.parentElement.remove();calcTotal()" class="btn text-danger">✕</button></div>
+        </div>`;
+        document.getElementById('items-list').insertAdjacentHTML('beforeend', row);
+        updateDataList();
+    }
+
+    function updateRow(id, val) {
+        const p = productList.find(x => x.ten === val);
+        if(p) { document.getElementById(`p-${id}`).innerText = p.gia_ban; document.getElementById(`s-${id}`).innerText = `Kho: ${p.ton_kho}`; calcTotal(); }
+    }
+
+    function calcTotal() {
+        let t = 0; document.querySelectorAll('.order-row').forEach(r => {
+            const id = r.id.split('-')[1]; t += Number(document.getElementById(`p-${id}`).innerText) * Number(document.getElementById(`q-${id}`).value);
+        });
+        document.getElementById('total-bill').innerText = t.toLocaleString();
+    }
+
+    async function sendOrder(type) {
+        const method = document.querySelector('input[name="method"]:checked').value;
+        const items = [];
+        document.querySelectorAll('.order-row').forEach(r => {
+            const id = r.id.split('-')[1], ten = r.querySelector('input').value, sl = Number(document.getElementById(`q-${id}`).value);
+            if(ten) items.push({ ten, sl, gia: Number(document.getElementById(`p-${id}`).innerText) });
+        });
+        if(items.length === 0) return;
+        Swal.fire({ title: 'Đang lưu...', didOpen: () => Swal.showLoading() });
+        await fetch(`${SCRIPT_URL}?action=saveOrder`, { method: 'POST', body: JSON.stringify({user: currentUser, type, method, items}) });
+        Swal.fire('Thành công!', '', 'success');
+        showTab(type === 'Bán hàng' ? 'ban-hang' : (type === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang')); loadProducts();
+    }
+
+    async function loadFinanceReport() {
+        const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        const now = new Date();
+        let dCash = 0, dBank = 0, mCash = 0, mBank = 0, mProfit = 0;
+        hist.forEach(x => {
+            const d = new Date(x.thoigian);
+            const amt = Number(x.thanhtien);
+            if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                if(x.pt_thanhtoan === "Tiền mặt") mCash += amt; else mBank += amt;
+                mProfit += Number(x.loi_nhuan);
+            }
+            if(d.toDateString() === now.toDateString()) {
+                if(x.pt_thanhtoan === "Tiền mặt") dCash += amt; else dBank += amt;
+            }
+        });
+        document.getElementById('content').innerHTML = `<h4>📊 Báo Cáo Tài Chính</h4>
+            <div class="row g-2 mb-3">
+                <div class="col-6"><div class="card p-2 bg-primary text-white">Ngày (Mặt):<br><b>${dCash.toLocaleString()}</b></div></div>
+                <div class="col-6"><div class="card p-2 bg-info text-white">Ngày (Bank):<br><b>${dBank.toLocaleString()}</b></div></div>
+                <div class="col-6"><div class="card p-2 bg-dark text-white">Tháng (Mặt):<br><b>${mCash.toLocaleString()}</b></div></div>
+                <div class="col-6"><div class="card p-2 bg-secondary text-white">Tháng (Bank):<br><b>${mBank.toLocaleString()}</b></div></div>
+            </div>
+            <div class="card p-3 bg-success text-white text-center"><h5>LÃI THÁNG NÀY: ${mProfit.toLocaleString()} đ</h5></div>`;
+    }
+
+    async function loadHistory() {
+        const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        let h = `<h4>📜 Nhật Ký</h4><table class="table table-sm"><thead><tr><th>Đơn</th><th>Món</th><th>Tiền</th><th></th></tr></thead><tbody>`;
+        hist.reverse().slice(0, 20).forEach((x, i) => {
+            h += `<tr><td><small>${x.madon}</small></td><td>${x.ten_sp}</td><td>${Number(x.thanhtien).toLocaleString()}</td>
+            <td><button onclick="deleteRow(${hist.length-i})" class="btn text-danger p-0">🗑️</button></td></tr>`;
+        });
+        document.getElementById('content').innerHTML = h + `</tbody></table>`;
+    }
+
+    async function deleteRow(idx) {
+        const res = await Swal.fire({ title: 'Xóa đơn?', text: 'Dữ liệu sẽ hoàn kho!', showCancelButton: true });
+        if(res.isConfirmed) {
+            await fetch(`${SCRIPT_URL}?action=deleteOrder`, { method: 'POST', body: JSON.stringify({row: idx + 1}) });
+            loadHistory(); loadProducts();
+        }
+    }
+
+    function updateDataList() {
+        let dl = document.getElementById('plist') || document.createElement('datalist');
+        dl.id = 'plist'; dl.innerHTML = productList.map(p => `<option value="${p.ten}">`).join('');
+        document.body.appendChild(dl);
+    }
+</script>
+</body>
+</html>
