@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS Master v1 - Kho Quản Lý</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
         .hidden { display: none; }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-        .sidebar-btn { width: 100%; text-align: left; padding: 15px; border: none; background: none; border-bottom: 1px solid #eee; transition: 0.2s; }
-        .sidebar-btn:hover { background: #e7f3ff; color: #0d6efd; }
         .order-row { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #0d6efd; }
         .stock-table-container { max-height: 500px; overflow-y: auto; }
         .low-stock { color: red; font-weight: bold; }
+        /* Style cho Menu 3 gạch */
+        .menu-btn { font-size: 1.5rem; cursor: pointer; border: none; background: none; padding: 0 10px; }
+        .sidebar-btn { width: 100%; text-align: left; padding: 15px; border: none; background: none; border-bottom: 1px solid #eee; transition: 0.2s; font-size: 1.1rem; }
+        .sidebar-btn:hover { background: #e7f3ff; color: #0d6efd; }
     </style>
 </head>
 <body>
@@ -31,33 +34,51 @@
 
     <div id="main-app" class="hidden">
         <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-            <span>👤 Nhân viên: <b id="u-display"></b></span>
+            <div class="d-flex align-items-center">
+                <button class="menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">
+                    ☰
+                </button>
+                <span class="ms-2">👤 Nhân viên: <b id="u-display"></b></span>
+            </div>
             <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Thoát</button>
         </header>
 
         <div class="row">
-            <div class="col-md-3 mb-3">
-                <div class="card shadow-sm overflow-hidden">
-                    <button class="sidebar-btn" onclick="showTab('ban-hang')">🛍️ Bán Hàng (Xuất)</button>
-                    <button class="sidebar-btn" onclick="showTab('nhap-hang')">📦 Nhập Hàng (Cộng)</button>
-                    <button class="sidebar-btn text-danger fw-bold" onclick="showTab('tra-hang')">↩️ Khách Trả Hàng</button>
-                    <button class="sidebar-btn" onclick="showTab('lich-su')">📜 Nhật Ký & Xóa Đơn</button>
-                    <button class="sidebar-btn bg-info-subtle fw-bold" onclick="showTab('bao-cao-kho')">📊 Xem Báo Cáo Kho</button>
-                    <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="showTab('loi-nhuan')">💰 Tài Chính & Lợi Nhuận</button>
-                </div>
-            </div>
-            <div class="col-md-9">
+            <div class="col-12">
                 <div id="content" class="card p-4 min-vh-50">
-                    <div class="text-center py-5 text-muted">Chào mừng bạn! Vui lòng chọn chức năng ở menu bên trái.</div>
+                    <div class="text-center py-5 text-muted">Bấm nút ☰ ở trên để chọn chức năng</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu" aria-labelledby="offcanvasMenuLabel">
+    <div class="offcanvas-header bg-primary text-white">
+        <h5 class="offcanvas-title" id="offcanvasMenuLabel">DANH MỤC CHỨC NĂNG</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <button class="sidebar-btn" onclick="handleMenuClick('ban-hang')">🛍️ Bán Hàng (Xuất)</button>
+        <button class="sidebar-btn" onclick="handleMenuClick('nhap-hang')">📦 Nhập Hàng (Cộng)</button>
+        <button class="sidebar-btn text-danger fw-bold" onclick="handleMenuClick('tra-hang')">↩️ Khách Trả Hàng</button>
+        <button class="sidebar-btn" onclick="handleMenuClick('lich-su')">📜 Nhật Ký & Xóa Đơn</button>
+        <button class="sidebar-btn bg-info-subtle fw-bold" onclick="handleMenuClick('bao-cao-kho')">📊 Xem Báo Cáo Kho</button>
+        <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="handleMenuClick('loi-nhuan')">💰 Tài Chính & Lợi Nhuận</button>
+    </div>
+</div>
+
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7quu8A47WBW2w4XWC3_sqDwez-E8FwB6UUigNGjBDAWFl9_lyp0MHSv2VRMF9a14TTQ/exec";
     let currentUser = "", currentRole = "", productList = [];
+
+    // Hàm đóng menu sau khi chọn món (cho gọn)
+    function handleMenuClick(tabName) {
+        const offcanvasElement = document.getElementById('offcanvasMenu');
+        const instance = bootstrap.Offcanvas.getInstance(offcanvasElement);
+        if (instance) instance.hide();
+        showTab(tabName);
+    }
 
     async function login() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
@@ -84,9 +105,9 @@
             document.getElementById('content').innerHTML = `<h4>${type}</h4>
                 <div id="items-list"></div>
                 <button onclick="addRow()" class="btn btn-outline-primary btn-sm mb-3">+ Thêm Món</button>
-                <div class="p-3 bg-light rounded">
+                <div class="p-3 bg-light rounded shadow-sm">
                     <div class="mb-3">
-                        <label class="fw-bold mb-2 d-block">Hình thức thanh toán:</label>
+                        <label class="fw-bold mb-2 d-block">Thanh toán:</label>
                         <div class="btn-group w-100">
                             <input type="radio" class="btn-check" name="method" id="m1" value="Tiền mặt" checked>
                             <label class="btn btn-outline-secondary" for="m1">💵 Tiền mặt</label>
@@ -94,8 +115,8 @@
                             <label class="btn btn-outline-secondary" for="m2">🏦 Bank</label>
                         </div>
                     </div>
-                    <h5 class="text-end">Tổng cộng: <span id="total-bill" class="text-danger fw-bold">0</span> đ</h5>
-                    <button onclick="sendOrder('${type}')" class="btn btn-primary w-100 btn-lg mt-2 fw-bold">XÁC NHẬN LƯU ĐƠN</button>
+                    <h5 class="text-end">Tổng: <span id="total-bill" class="text-danger fw-bold">0</span> đ</h5>
+                    <button onclick="sendOrder('${type}')" class="btn btn-primary w-100 btn-lg mt-2 fw-bold">XÁC NHẬN LƯU</button>
                 </div>`;
             addRow();
         } 
@@ -107,9 +128,9 @@
     function addRow() {
         const id = Date.now();
         const row = `<div class="order-row row g-2" id="row-${id}">
-            <div class="col-6"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control" placeholder="Tên sản phẩm..."></div>
+            <div class="col-7"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control" placeholder="Tên sp..."></div>
             <div class="col-2"><input type="number" id="q-${id}" onchange="calcTotal()" class="form-control text-center" value="1" min="1"></div>
-            <div class="col-3 text-end"><b id="p-${id}">0</b> <div class="text-muted small" id="s-${id}"></div></div>
+            <div class="col-2 text-end"><b id="p-${id}">0</b></div>
             <div class="col-1 text-center"><button onclick="this.parentElement.parentElement.remove();calcTotal()" class="btn text-danger">✕</button></div>
         </div>`;
         document.getElementById('content').querySelector('#items-list').insertAdjacentHTML('beforeend', row);
@@ -118,11 +139,7 @@
 
     function updateRow(id, val) {
         const p = productList.find(x => x.ten === val);
-        if(p) { 
-            document.getElementById(`p-${id}`).innerText = p.gia_ban; 
-            document.getElementById(`s-${id}`).innerText = `Kho: ${p.ton_kho}`;
-            calcTotal(); 
-        }
+        if(p) { document.getElementById(`p-${id}`).innerText = p.gia_ban; calcTotal(); }
     }
 
     function calcTotal() {
@@ -151,11 +168,11 @@
 
     function renderStockTable() {
         let html = `<h4>📦 Báo Cáo Tồn Kho</h4>
-                    <input type="text" id="stock-search" class="form-control mb-3" placeholder="Tìm tên sản phẩm nhanh..." onkeyup="filterStock()">
+                    <input type="text" id="stock-search" class="form-control mb-3" placeholder="Tìm sản phẩm..." onkeyup="filterStock()">
                     <div class="stock-table-container">
                         <table class="table table-bordered table-striped">
                             <thead class="table-dark sticky-top">
-                                <tr><th>Sản phẩm</th><th>Tồn kho</th></tr>
+                                <tr><th>Tên</th><th>Tồn</th></tr>
                             </thead>
                             <tbody id="stock-body">`;
         productList.forEach(p => {
@@ -169,16 +186,16 @@
     function filterStock() {
         let val = document.getElementById('stock-search').value.toLowerCase();
         let rows = document.getElementById('stock-body').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            let text = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
-            rows[i].style.display = text.includes(val) ? "" : "none";
+        for (let row of rows) {
+            let text = row.cells[0].innerText.toLowerCase();
+            row.style.display = text.includes(val) ? "" : "none";
         }
     }
 
     async function loadHistory() {
         const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
-        let h = `<h4>📜 Nhật Ký Đơn Hàng</h4><table class="table table-sm"><thead><tr><th>Đơn</th><th>Món</th><th>Tiền</th><th></th></tr></thead><tbody>`;
-        hist.reverse().slice(0, 20).forEach((x, i) => {
+        let h = `<h4>📜 Nhật Ký</h4><table class="table table-sm"><thead><tr><th>Mã</th><th>Món</th><th>Tiền</th><th></th></tr></thead><tbody>`;
+        hist.reverse().slice(0, 15).forEach((x, i) => {
             h += `<tr><td><small>${x.madon}</small></td><td>${x.ten_sp}</td><td>${Number(x.thanhtien).toLocaleString()}</td>
             <td><button onclick="deleteRow(${hist.length - i})" class="btn text-danger p-0">🗑️</button></td></tr>`;
         });
@@ -186,7 +203,7 @@
     }
 
     async function deleteRow(idx) {
-        const res = await Swal.fire({ title: 'Xóa đơn?', text: 'Dữ liệu sẽ hoàn kho!', showCancelButton: true });
+        const res = await Swal.fire({ title: 'Xóa đơn?', icon: 'warning', showCancelButton: true });
         if(res.isConfirmed) {
             Swal.showLoading();
             await fetch(`${SCRIPT_URL}?action=deleteOrder`, { method: 'POST', body: JSON.stringify({row: idx + 1}) });
@@ -210,10 +227,10 @@
         });
         document.getElementById('content').innerHTML = `<h4>💰 Tài Chính</h4>
             <div class="row g-2 mb-3">
-                <div class="col-6"><div class="card p-3 bg-primary text-white">Hôm nay (Mặt):<br><b>${dCash.toLocaleString()}</b></div></div>
-                <div class="col-6"><div class="card p-3 bg-info text-white">Hôm nay (Bank):<br><b>${dBank.toLocaleString()}</b></div></div>
+                <div class="col-6"><div class="card p-3 bg-primary text-white">Ngày (Mặt):<br><b>${dCash.toLocaleString()}</b></div></div>
+                <div class="col-6"><div class="card p-3 bg-info text-white">Ngày (Bank):<br><b>${dBank.toLocaleString()}</b></div></div>
             </div>
-            <div class="card p-3 bg-success text-white text-center"><h5>LÃI THÁNG NÀY: ${mProfit.toLocaleString()} đ</h5></div>`;
+            <div class="card p-3 bg-success text-white text-center"><h5>Lãi Tháng: ${mProfit.toLocaleString()} đ</h5></div>`;
     }
 
     function updateDataList() {
