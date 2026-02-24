@@ -13,6 +13,8 @@
         .sidebar-btn { width: 100%; text-align: left; padding: 15px; border: none; background: none; border-bottom: 1px solid #eee; transition: 0.2s; }
         .sidebar-btn:hover { background: #e7f3ff; color: #0d6efd; }
         .order-row { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #0d6efd; }
+        .stock-table-container { max-height: 500px; overflow-y: auto; }
+        .low-stock { color: red; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -40,12 +42,13 @@
                     <button class="sidebar-btn" onclick="showTab('nhap-hang')">📦 Nhập Hàng (Cộng)</button>
                     <button class="sidebar-btn text-danger fw-bold" onclick="showTab('tra-hang')">↩️ Khách Trả Hàng</button>
                     <button class="sidebar-btn" onclick="showTab('lich-su')">📜 Nhật Ký & Xóa Đơn</button>
-                    <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="showTab('loi-nhuan')">📊 Tài Chính & Lợi Nhuận</button>
+                    <button class="sidebar-btn bg-info-subtle fw-bold" onclick="showTab('bao-cao-kho')">📊 Xem Báo Cáo Kho</button>
+                    <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="showTab('loi-nhuan')">💰 Tài Chính & Lợi Nhuận</button>
                 </div>
             </div>
             <div class="col-md-9">
                 <div id="content" class="card p-4 min-vh-50">
-                    <div class="text-center py-5 text-muted">Vui lòng chọn chức năng</div>
+                    <div class="text-center py-5 text-muted">Chào mừng bạn! Vui lòng chọn chức năng ở menu bên trái.</div>
                 </div>
             </div>
         </div>
@@ -53,7 +56,6 @@
 </div>
 
 <script>
-    // URL Apps Script bạn đã cung cấp
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7quu8A47WBW2w4XWC3_sqDwez-E8FwB6UUigNGjBDAWFl9_lyp0MHSv2VRMF9a14TTQ/exec";
     let currentUser = "", currentRole = "", productList = [];
 
@@ -69,7 +71,6 @@
             document.getElementById('u-display').innerText = u;
             if(res.role === 'admin') document.getElementById('admin-btn').classList.remove('hidden');
             await loadProducts();
-            showStockAlert();
         } else { Swal.fire('Lỗi', 'Sai thông tin đăng nhập!', 'error'); }
     }
 
@@ -93,11 +94,13 @@
                             <label class="btn btn-outline-secondary" for="m2">🏦 Bank</label>
                         </div>
                     </div>
-                    <h5 class="text-end">Tổng tiền: <span id="total-bill" class="text-danger fw-bold">0</span> đ</h5>
-                    <button onclick="sendOrder('${type}')" class="btn btn-primary w-100 btn-lg mt-2 fw-bold">XÁC NHẬN LƯU</button>
+                    <h5 class="text-end">Tổng cộng: <span id="total-bill" class="text-danger fw-bold">0</span> đ</h5>
+                    <button onclick="sendOrder('${type}')" class="btn btn-primary w-100 btn-lg mt-2 fw-bold">XÁC NHẬN LƯU ĐƠN</button>
                 </div>`;
             addRow();
-        } else if(name === 'lich-su') { loadHistory(); }
+        } 
+        else if(name === 'lich-su') { loadHistory(); }
+        else if(name === 'bao-cao-kho') { renderStockTable(); }
         else if(name === 'loi-nhuan') { loadFinanceReport(); }
     }
 
@@ -109,7 +112,7 @@
             <div class="col-3 text-end"><b id="p-${id}">0</b> <div class="text-muted small" id="s-${id}"></div></div>
             <div class="col-1 text-center"><button onclick="this.parentElement.parentElement.remove();calcTotal()" class="btn text-danger">✕</button></div>
         </div>`;
-        document.getElementById('items-list').insertAdjacentHTML('beforeend', row);
+        document.getElementById('content').querySelector('#items-list').insertAdjacentHTML('beforeend', row);
         updateDataList();
     }
 
@@ -141,8 +144,56 @@
         if(items.length === 0) return;
         Swal.showLoading();
         await fetch(`${SCRIPT_URL}?action=saveOrder`, { method: 'POST', body: JSON.stringify({user: currentUser, type, method, items}) });
+        await loadProducts();
         Swal.fire('Thành công!', '', 'success');
-        showTab(type === 'Bán hàng' ? 'ban-hang' : (type === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang')); loadProducts();
+        showTab(type === 'Bán hàng' ? 'ban-hang' : (type === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang')); 
+    }
+
+    function renderStockTable() {
+        let html = `<h4>📦 Báo Cáo Tồn Kho</h4>
+                    <input type="text" id="stock-search" class="form-control mb-3" placeholder="Tìm tên sản phẩm nhanh..." onkeyup="filterStock()">
+                    <div class="stock-table-container">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark sticky-top">
+                                <tr><th>Sản phẩm</th><th>Tồn kho</th></tr>
+                            </thead>
+                            <tbody id="stock-body">`;
+        productList.forEach(p => {
+            const lowClass = p.ton_kho < 5 ? 'low-stock' : '';
+            html += `<tr><td>${p.ten}</td><td class="${lowClass}">${p.ton_kho}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        document.getElementById('content').innerHTML = html;
+    }
+
+    function filterStock() {
+        let val = document.getElementById('stock-search').value.toLowerCase();
+        let rows = document.getElementById('stock-body').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            let text = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
+            rows[i].style.display = text.includes(val) ? "" : "none";
+        }
+    }
+
+    async function loadHistory() {
+        const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        let h = `<h4>📜 Nhật Ký Đơn Hàng</h4><table class="table table-sm"><thead><tr><th>Đơn</th><th>Món</th><th>Tiền</th><th></th></tr></thead><tbody>`;
+        hist.reverse().slice(0, 20).forEach((x, i) => {
+            h += `<tr><td><small>${x.madon}</small></td><td>${x.ten_sp}</td><td>${Number(x.thanhtien).toLocaleString()}</td>
+            <td><button onclick="deleteRow(${hist.length - i})" class="btn text-danger p-0">🗑️</button></td></tr>`;
+        });
+        document.getElementById('content').innerHTML = h + `</tbody></table>`;
+    }
+
+    async function deleteRow(idx) {
+        const res = await Swal.fire({ title: 'Xóa đơn?', text: 'Dữ liệu sẽ hoàn kho!', showCancelButton: true });
+        if(res.isConfirmed) {
+            Swal.showLoading();
+            await fetch(`${SCRIPT_URL}?action=deleteOrder`, { method: 'POST', body: JSON.stringify({row: idx + 1}) });
+            await loadProducts();
+            loadHistory();
+            Swal.fire('Đã xóa!', '', 'success');
+        }
     }
 
     async function loadFinanceReport() {
@@ -157,39 +208,12 @@
             }
             if(d.getMonth() === now.getMonth()) mProfit += Number(x.loi_nhuan);
         });
-        document.getElementById('content').innerHTML = `<h4>📊 Tài Chính Tháng ${now.getMonth()+1}</h4>
+        document.getElementById('content').innerHTML = `<h4>💰 Tài Chính</h4>
             <div class="row g-2 mb-3">
                 <div class="col-6"><div class="card p-3 bg-primary text-white">Hôm nay (Mặt):<br><b>${dCash.toLocaleString()}</b></div></div>
                 <div class="col-6"><div class="card p-3 bg-info text-white">Hôm nay (Bank):<br><b>${dBank.toLocaleString()}</b></div></div>
             </div>
-            <div class="card p-3 bg-success text-white text-center"><h5>ƯỚC TÍNH LÃI THÁNG: ${mProfit.toLocaleString()} đ</h5></div>`;
-    }
-
-    async function loadHistory() {
-        const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
-        let h = `<h4>📜 Nhật Ký</h4><table class="table table-sm"><thead><tr><th>Đơn</th><th>Món</th><th>Tiền</th><th></th></tr></thead><tbody>`;
-        hist.reverse().slice(0, 15).forEach((x, i) => {
-            h += `<tr><td><small>${x.madon}</small></td><td>${x.ten_sp}</td><td>${Number(x.thanhtien).toLocaleString()}</td>
-            <td><button onclick="deleteRow(${hist.length - i})" class="btn text-danger p-0">🗑️</button></td></tr>`;
-        });
-        document.getElementById('content').innerHTML = h + `</tbody></table>`;
-    }
-
-    async function deleteRow(idx) {
-        const res = await Swal.fire({ title: 'Xóa đơn?', text: 'Dữ liệu sẽ hoàn kho!', showCancelButton: true });
-        if(res.isConfirmed) {
-            await fetch(`${SCRIPT_URL}?action=deleteOrder`, { method: 'POST', body: JSON.stringify({row: idx + 1}) });
-            loadHistory(); loadProducts();
-        }
-    }
-
-    function showStockAlert() {
-        let list = "";
-        productList.forEach(p => { 
-            const color = p.ton_kho < 5 ? "text-danger fw-bold" : "";
-            list += `<div class="d-flex justify-content-between border-bottom py-1 ${color}"><span>${p.ten}</span><span>${p.ton_kho}</span></div>`;
-        });
-        Swal.fire({ title: 'Báo Cáo Kho', html: `<div class="text-start" style="font-size:0.95rem">${list}</div>` });
+            <div class="card p-3 bg-success text-white text-center"><h5>LÃI THÁNG NÀY: ${mProfit.toLocaleString()} đ</h5></div>`;
     }
 
     function updateDataList() {
