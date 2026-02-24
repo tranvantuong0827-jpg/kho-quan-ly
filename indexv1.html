@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Pro Mobile - Vũng Tàu Aquarium</title>
+    <title>POS Pro Max - Vũng Tàu Aquarium</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root { --ban-hang: #28a745; --nhap-hang: #007bff; --tra-hang: #dc3545; }
+        :root { --ban-hang: #28a745; --nhap-hang: #007bff; --tra-hang: #dc3545; --tai-chinh: #6c757d; }
         body { background: #f0f2f5; font-family: -apple-system, sans-serif; }
         .hidden { display: none; }
         
-        /* Giao diện Mobile tối ưu */
         .order-row { 
             background: #fff; padding: 15px; border-radius: 12px; 
             margin-bottom: 10px; border-left: 8px solid #ccc;
@@ -22,19 +21,16 @@
         .nhap-hang-theme { border-left-color: var(--nhap-hang) !important; }
         .tra-hang-theme { border-left-color: var(--tra-hang) !important; }
 
-        .btn-lg-mobile { padding: 12px; font-weight: bold; border-radius: 10px; }
-        .price-text { color: #666; font-size: 0.9rem; }
-        
-        /* Header & Sidebar */
-        .header-pos { background: #fff; padding: 12px; border-bottom: 1px solid #ddd; }
         .sidebar-btn { 
             width: 100%; text-align: left; padding: 18px 25px; 
             border: none; background: none; border-bottom: 1px solid #f0f0f0; 
             font-size: 1.1rem;
         }
-
-        /* Dashboad Alert */
-        .alert-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        .bg-grey-pos { background-color: var(--tai-chinh) !important; color: white !important; }
+        
+        /* Tối ưu hiển thị số liệu */
+        .stat-card { background: #fff; border-radius: 15px; padding: 15px; border-top: 4px solid var(--tai-chinh); }
+        .stat-val { font-size: 1.2rem; font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
@@ -46,56 +42,48 @@
                 <h3 class="fw-bold text-primary mb-4">POS AQUARIUM</h3>
                 <input type="text" id="u" class="form-control mb-3 py-3" placeholder="Tài khoản">
                 <input type="password" id="p" class="form-control mb-3 py-3" placeholder="Mật khẩu">
-                <div class="form-check text-start mb-4">
-                    <input class="form-check-input" type="checkbox" id="remember">
-                    <label class="form-check-label small" for="remember">Ghi nhớ đăng nhập</label>
-                </div>
-                <button onclick="login()" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">ĐĂNG NHẬP</button>
+                <button onclick="login()" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">ĐĂNG NHẬP NHANH</button>
                 <div id="auto-login-area" class="hidden mt-3">
-                    <button onclick="autoLoginPrompt()" class="btn btn-light btn-sm w-100">Dùng tài khoản đã lưu</button>
+                    <button onclick="document.getElementById('p').focus()" class="btn btn-light btn-sm w-100">Dùng tài khoản đã lưu</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="main-app" class="hidden">
-        <div class="header-pos d-flex justify-content-between align-items-center sticky-top">
+        <div class="bg-white p-3 d-flex justify-content-between align-items-center sticky-top shadow-sm">
             <div class="d-flex align-items-center">
                 <button class="fs-3 border-0 bg-transparent me-2" data-bs-toggle="offcanvas" data-bs-target="#menu">☰</button>
-                <div>
-                    <div class="small text-muted">Chào, <b id="u-display"></b></div>
-                    <div id="clock-header" style="font-size: 0.75rem; font-weight: bold; color: #0d6efd;"></div>
-                </div>
+                <b id="u-display"></b>
             </div>
-            <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Thoát</button>
+            <div id="clock-header" class="fw-bold text-primary small"></div>
         </div>
 
         <div class="p-3" id="main-content">
             <div id="dashboard">
-                <div class="alert-card shadow-sm border-start border-danger border-4">
-                    <h6 class="fw-bold text-danger mb-3">🔥 CẢNH BÁO HẾT HÀNG</h6>
-                    <div id="low-stock-list">Đang kiểm tra...</div>
-                </div>
-                <div class="text-center text-muted mt-5 px-4">
-                    <p>Bấm menu ☰ để chọn nghiệp vụ Bán hoặc Nhập hàng.</p>
+                <div class="card p-4 text-center shadow-sm border-0">
+                    <h5 id="date-now" class="text-muted mb-3"></h5>
+                    <div class="alert alert-danger py-2 px-3 small fw-bold">🔥 CẢNH BÁO KHO: <span id="low-count">0</span> món sắp hết</div>
+                    <div id="low-stock-list" class="text-start mt-2"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="offcanvas offcanvas-start" tabindex="-1" id="menu" style="width: 280px;">
+<div class="offcanvas offcanvas-start" tabindex="-1" id="menu">
     <div class="offcanvas-header bg-dark text-white">
-        <h5 class="offcanvas-title fw-bold">DANH MỤC</h5>
+        <h5 class="offcanvas-title fw-bold">QUẢN LÝ</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body p-0">
         <button class="sidebar-btn" onclick="openTab('ban-hang')">🛍️ Bán Hàng (Xuất)</button>
         <button class="sidebar-btn" onclick="openTab('nhap-hang')">📦 Nhập Hàng (Cộng)</button>
         <button class="sidebar-btn text-danger fw-bold" onclick="openTab('tra-hang')">↩️ Khách Trả Hàng</button>
-        <button class="sidebar-btn" onclick="openTab('lich-su')">📜 Nhật Ký & Xóa Đơn</button>
-        <button class="sidebar-btn" onclick="openTab('bao-cao-kho')">📊 Xem Báo Cáo Kho</button>
-        <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="openTab('loi-nhuan')">💰 Tài Chính & Lãi</button>
+        <button class="sidebar-btn" onclick="openTab('lich-su')">📜 Nhật Ký</button>
+        <button class="sidebar-btn" onclick="openTab('bao-cao-kho')">📊 Báo Cáo Kho</button>
+        <button id="admin-btn" class="sidebar-btn bg-grey-pos fw-bold hidden" onclick="openTab('loi-nhuan')">💰 Tài Chính & Lãi</button>
+        <button onclick="location.reload()" class="sidebar-btn text-muted">Logout</button>
     </div>
 </div>
 
@@ -104,106 +92,75 @@
     let currentUser = "", currentRole = "", productList = [];
 
     window.onload = () => {
-        const saved = localStorage.getItem('pos_user');
-        if(saved) {
-            document.getElementById('auto-login-area').classList.remove('hidden');
-            document.getElementById('u').value = saved;
-        }
-        updateTime(); setInterval(updateTime, 1000);
+        if(localStorage.getItem('pos_user')) document.getElementById('auto-login-area').classList.remove('hidden');
+        setInterval(() => {
+            const n = new Date();
+            document.getElementById('clock-header').innerText = n.toLocaleTimeString('vi-VN');
+            if(document.getElementById('date-now')) document.getElementById('date-now').innerText = n.toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+        }, 1000);
     };
-
-    function updateTime() {
-        const n = new Date();
-        const s = n.getHours().toString().padStart(2,'0') + ":" + n.getMinutes().toString().padStart(2,'0') + ":" + n.getSeconds().toString().padStart(2,'0');
-        if(document.getElementById('clock-header')) document.getElementById('clock-header').innerText = s;
-    }
 
     async function login() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
-        Swal.fire({title: 'Đang đăng nhập...', didOpen: () => Swal.showLoading()});
+        Swal.fire({title: 'Kết nối...', didOpen: () => Swal.showLoading()});
         try {
             const r = await fetch(`${SCRIPT_URL}?action=login`, {method: 'POST', body: JSON.stringify({u, p})}).then(res => res.json());
             if(r.status === 'success') {
-                if(document.getElementById('remember').checked) localStorage.setItem('pos_user', u);
+                localStorage.setItem('pos_user', u);
                 currentUser = u; currentRole = r.role;
-                initApp(); Swal.close();
-            } else { Swal.fire('Lỗi', 'Sai tài khoản hoặc mật khẩu', 'error'); }
-        } catch(e) { Swal.fire('Lỗi kết nối', '', 'error'); }
-    }
-
-    function autoLoginPrompt() { Swal.fire('Vui lòng nhập mật khẩu', '', 'info').then(() => document.getElementById('p').focus()); }
-
-    async function initApp() {
-        document.getElementById('login-box').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        document.getElementById('u-display').innerText = currentUser;
-        if(currentRole === 'admin') document.getElementById('admin-btn').classList.remove('hidden');
-        await refreshData();
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('u-display').innerText = currentUser;
+                if(currentRole === 'admin') document.getElementById('admin-btn').classList.remove('hidden');
+                await refreshData();
+                Swal.close();
+            } else { Swal.fire('Lỗi', 'Sai thông tin', 'error'); }
+        } catch(e) { Swal.fire('Lỗi mạng', '', 'error'); }
     }
 
     async function refreshData() {
         productList = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json());
-        renderAlerts();
-    }
-
-    function renderAlerts() {
         const low = productList.filter(p => p.ton_kho < 5);
-        document.getElementById('low-stock-list').innerHTML = low.length ? 
-            low.map(p => `<div class="d-flex justify-content-between border-bottom py-2"><span>${p.ten}</span><b class="text-danger">${p.ton_kho}</b></div>`).join('') : 
-            "<p class='text-success small m-0'>Đầy đủ hàng</p>";
+        document.getElementById('low-count').innerText = low.length;
+        document.getElementById('low-stock-list').innerHTML = low.map(p => `<div class="d-flex justify-content-between border-bottom py-1 small"><span>${p.ten}</span><b class="text-danger">${p.ton_kho}</b></div>`).join('');
     }
 
     function openTab(name) {
         bootstrap.Offcanvas.getInstance(document.getElementById('menu')).hide();
         const content = document.getElementById('main-content');
-        
         if(['ban-hang', 'nhap-hang', 'tra-hang'].includes(name)) {
             const type = name === 'ban-hang' ? "Bán hàng" : (name === 'nhap-hang' ? "Nhập hàng" : "Khách trả hàng");
             const theme = name === 'ban-hang' ? "ban-hang-theme" : (name === 'nhap-hang' ? "nhap-hang-theme" : "tra-hang-theme");
-            const btnColor = name === 'ban-hang' ? "btn-success" : (name === 'nhap-hang' ? "btn-primary" : "btn-danger");
-            
-            content.innerHTML = `<h4 class="fw-bold mb-3">${type}</h4>
-                <div id="items-list"></div>
-                <button onclick="addRow('${theme}')" class="btn btn-outline-secondary w-100 mb-4 py-2">+ Thêm sản phẩm</button>
-                <div class="card p-3 shadow-sm border-0 mb-5" style="border-radius:15px; background: #fff;">
-                    <div class="mb-3">
-                        <label class="small fw-bold mb-2">Hình thức:</label>
-                        <select id="p-method" class="form-select form-select-lg">
-                            <option value="Tiền mặt">💵 Tiền mặt</option>
-                            <option value="Chuyển khoản">🏦 Chuyển khoản (Bank)</option>
-                        </select>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold">TỔNG CỘNG:</span>
-                        <span id="total-bill" class="fs-3 fw-bold text-danger">0</span>
-                    </div>
-                    <button onclick="submitOrder('${type}')" class="btn ${btnColor} w-100 py-3 fw-bold rounded-pill">XÁC NHẬN LƯU</button>
+            content.innerHTML = `<h4 class="fw-bold mb-3">${type}</h4><div id="items-list"></div>
+                <button onclick="addRow('${theme}')" class="btn btn-outline-secondary w-100 mb-3">+ Thêm món</button>
+                <div class="card p-3 shadow-sm border-0">
+                    <select id="p-method" class="form-select mb-3"><option value="Tiền mặt">💵 Tiền mặt</option><option value="Chuyển khoản">🏦 Chuyển khoản</option></select>
+                    <div class="d-flex justify-content-between mb-3"><span class="fw-bold">TỔNG:</span><span id="total-bill" class="fs-4 fw-bold text-danger">0</span></div>
+                    <button onclick="submitOrder('${type}')" class="btn btn-lg w-100 fw-bold rounded-pill ${name==='ban-hang'?'btn-success':(name==='nhap-hang'?'btn-primary':'btn-danger')}">XÁC NHẬN ${type.toUpperCase()}</button>
                 </div>`;
             addRow(theme);
         } else if(name === 'lich-su') { renderHistory(); }
         else if(name === 'bao-cao-kho') { renderStock(); }
-        else if(name === 'loi-nhuan') { renderProfit(); }
+        else if(name === 'loi-nhuan') { renderFinance(); }
     }
 
     function addRow(theme) {
         const id = Date.now();
         const row = `<div class="order-row ${theme} row g-1" id="row-${id}">
-            <div class="col-12 mb-2"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control form-control-lg" placeholder="Chọn tên cá/mồi..."></div>
-            <div class="col-4"><input type="number" id="q-${id}" onchange="calc()" class="form-control form-control-lg text-center" value="1"></div>
-            <div class="col-6 text-end pt-1"><div class="price-text" id="unit-${id}">0 đ</div><b class="fs-5" id="p-${id}">0</b></div>
-            <div class="col-2 text-center"><button onclick="this.parentElement.parentElement.remove();calc()" class="btn btn-link text-danger fs-4 mt-1">✕</button></div>
+            <div class="col-12 mb-1"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control" placeholder="Tên sản phẩm..."></div>
+            <div class="col-4"><input type="number" id="q-${id}" onchange="calc()" class="form-control text-center" value="1"></div>
+            <div class="col-6 text-end pt-1"><b class="fs-6" id="p-${id}">0</b> đ</div>
+            <div class="col-2 text-center"><button onclick="this.parentElement.parentElement.remove();calc()" class="btn text-danger">✕</button></div>
         </div>`;
         document.getElementById('items-list').insertAdjacentHTML('beforeend', row);
-        updateDatalist();
+        let d = document.getElementById('plist') || document.createElement('datalist');
+        d.id = 'plist'; d.innerHTML = productList.map(p => `<option value="${p.ten}">`).join('');
+        document.body.appendChild(d);
     }
 
     function updateRow(id, val) {
         const p = productList.find(x => x.ten === val);
-        if(p) {
-            document.getElementById(`unit-${id}`).innerText = p.gia_ban.toLocaleString() + " đ";
-            document.getElementById(`p-${id}`).innerText = p.gia_ban;
-            calc();
-        }
+        if(p) { document.getElementById(`p-${id}`).innerText = p.gia_ban; calc(); }
     }
 
     function calc() {
@@ -216,52 +173,58 @@
     }
 
     async function submitOrder(type) {
-        const method = document.getElementById('p-method').value;
         const items = [];
         document.querySelectorAll('.order-row').forEach(r => {
             const id = r.id.split('-')[1], ten = r.querySelector('input').value, sl = Number(document.getElementById(`q-${id}`).value);
             if(ten) items.push({ten, sl, gia: Number(document.getElementById(`p-${id}`).innerText)});
         });
         if(!items.length) return;
-        
-        Swal.fire({title: 'Đang lưu...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-        await fetch(`${SCRIPT_URL}?action=saveOrder`, {method: 'POST', body: JSON.stringify({user: currentUser, type, method, items})});
+        Swal.fire({title: 'Đang lưu...', didOpen: () => Swal.showLoading()});
+        await fetch(`${SCRIPT_URL}?action=saveOrder`, {method: 'POST', body: JSON.stringify({user: currentUser, type, method: document.getElementById('p-method').value, items})});
         await refreshData();
         Swal.fire('Thành công', '', 'success');
         openTab(type === 'Bán hàng' ? 'ban-hang' : (type === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang'));
     }
 
+    async function renderFinance() {
+        const h = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        const now = new Date();
+        const todayStr = now.toLocaleDateString('vi-VN');
+        const monthStr = (now.getMonth() + 1) + "/" + now.getFullYear();
+        
+        let dRev = 0, dProfit = 0, mRev = 0, mProfit = 0;
+        
+        h.forEach(x => {
+            const d = new Date(x.thoigian);
+            const amt = Number(x.thanhtien), lãi = Number(x.loi_nhuan);
+            if(d.toLocaleDateString('vi-VN') === todayStr) { dRev += amt; dProfit += lãi; }
+            if((d.getMonth()+1)+"/"+d.getFullYear() === monthStr) { mRev += amt; mProfit += lãi; }
+        });
+
+        document.getElementById('main-content').innerHTML = `
+            <h4 class="fw-bold mb-3" style="color:var(--tai-chinh)">💰 TÀI CHÍNH & LÃI</h4>
+            <div class="row g-2">
+                <div class="col-6"><div class="stat-card shadow-sm"><small>Doanh thu ngày</small><div class="stat-val text-primary">${dRev.toLocaleString()}</div></div></div>
+                <div class="col-6"><div class="stat-card shadow-sm"><small>Lãi ngày</small><div class="stat-val text-success">${dProfit.toLocaleString()}</div></div></div>
+                <div class="col-12"><div class="stat-card shadow-sm"><small>Doanh thu tháng (${monthStr})</small><div class="stat-val text-primary">${mRev.toLocaleString()}</div></div></div>
+                <div class="col-12"><div class="stat-card shadow-sm"><small>Lãi tháng (${monthStr})</small><div class="stat-val text-success">${mProfit.toLocaleString()}</div></div></div>
+            </div>
+        `;
+    }
+
     async function renderHistory() {
         const h = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
-        let html = `<h4 class="fw-bold mb-3">📜 Nhật ký</h4>`;
-        h.reverse().slice(0,15).forEach((x, i) => {
-            html += `<div class="card p-3 mb-2 border-0 shadow-sm small">
+        document.getElementById('main-content').innerHTML = `<h4 class="fw-bold mb-3">📜 Nhật ký</h4>` + 
+            h.reverse().slice(0,10).map(x => `<div class="card p-2 mb-2 border-0 shadow-sm small">
                 <div class="d-flex justify-content-between"><b>${x.madon}</b> <span>${x.pt_thanhtoan}</span></div>
-                <div class="text-primary">${x.ten_sp} (x${x.sl})</div>
-                <div class="d-flex justify-content-between mt-1"><span>${new Date(x.thoigian).toLocaleTimeString()}</span> <b class="text-danger">${Number(x.thanhtien).toLocaleString()} đ</b></div>
-            </div>`;
-        });
-        document.getElementById('main-content').innerHTML = html;
+                <div>${x.ten_sp} (x${x.sl})</div>
+                <div class="text-end text-danger fw-bold">${Number(x.thanhtien).toLocaleString()} đ</div>
+            </div>`).join('');
     }
 
     function renderStock() {
-        let html = `<h4 class="fw-bold mb-3">📊 Tồn kho</h4><input type="text" class="form-control mb-3" placeholder="Tìm kiếm..." onkeyup="filter(this.value)">
-            <div id="s-list">` + productList.map(p => `<div class="card p-2 mb-1 border-0 shadow-sm d-flex flex-row justify-content-between">
-                <span>${p.ten}</span><b class="${p.ton_kho < 5 ? 'text-danger' : ''}">${p.ton_kho}</b>
-            </div>`).join('') + `</div>`;
-        document.getElementById('main-content').innerHTML = html;
-    }
-
-    function filter(v) {
-        document.querySelectorAll('#s-list .card').forEach(c => {
-            c.style.display = c.innerText.toLowerCase().includes(v.toLowerCase()) ? "flex" : "none";
-        });
-    }
-
-    function updateDatalist() {
-        let d = document.getElementById('plist') || document.createElement('datalist');
-        d.id = 'plist'; d.innerHTML = productList.map(p => `<option value="${p.ten}">`).join('');
-        document.body.appendChild(d);
+        document.getElementById('main-content').innerHTML = `<h4 class="fw-bold mb-3">📊 Tồn kho</h4>` + 
+            productList.map(p => `<div class="card p-2 mb-1 border-0 shadow-sm d-flex flex-row justify-content-between"><span>${p.ten}</span><b>${p.ton_kho}</b></div>`).join('');
     }
 </script>
 </body>
