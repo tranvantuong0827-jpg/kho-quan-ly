@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Pro Max v6 - Vũng Tàu Aquarium</title>
+    <title>POS Pro Max v8 - Vũng Tàu Aquarium</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -19,9 +19,9 @@
         .nhap-theme { border-left-color: var(--nhap) !important; }
         .tra-theme { border-left-color: var(--tra) !important; }
         .bg-grey-pos { background-color: var(--tai-chinh) !important; color: white !important; }
-        .stock-info { font-size: 0.85rem; color: #777; font-weight: bold; }
-        .price-display { font-weight: bold; color: #333; }
         .stat-card { background: #fff; border-radius: 15px; padding: 15px; border-top: 4px solid var(--tai-chinh); }
+        .stat-val { font-size: 1.1rem; font-weight: bold; }
+        .stock-info { font-size: 0.85rem; color: #777; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -77,12 +77,13 @@
 
 <script>
     // URL MỚI CỦA BẠN
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYMUlWV2W-IV02kxlbPkKAlbkr5IYYTsMbO6YLgeIFNawUEmMLQW65pOC0kGfwu5_d/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTyeYHqaNEHDHlFJKpzViAsvcueUtFRWB0flhW9i78yeHGzcnjL3eWRVsKCH1VJiPd/exec";
     let currentUser = "", currentRole = "", productList = [], historyData = [];
 
     function fM(n) { return Number(n).toLocaleString('vi-VN') + " đ"; }
 
     window.onload = () => {
+        if(localStorage.getItem('pos_user')) document.getElementById('u').value = localStorage.getItem('pos_user');
         setInterval(() => {
             const n = new Date();
             document.getElementById('clock-header').innerText = n.toLocaleTimeString('vi-VN');
@@ -97,11 +98,11 @@
         try {
             const r = await fetch(`${SCRIPT_URL}?action=login`, {method: 'POST', body: JSON.stringify({u, p})}).then(res => res.json());
             if(r.status === 'success') {
+                localStorage.setItem('pos_user', u);
                 currentUser = u; currentRole = r.role;
                 document.getElementById('login-box').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('u-display').innerText = currentUser;
-                // Chỉ hiện nút Tài chính nếu là admin
                 if(currentRole === 'admin') document.getElementById('admin-btn-menu').classList.remove('hidden');
                 await Promise.all([refreshProducts(), refreshHistory()]);
             } else { Swal.fire('Lỗi', 'Thông tin sai!', 'error'); btn.disabled = false; btn.innerText = "ĐĂNG NHẬP"; }
@@ -137,16 +138,13 @@
             addRow(theme, name);
         } else if(name === 'lich-su') { renderHistory(); }
         else if(name === 'bao-cao-kho') { renderStock(); }
-        else if(name === 'loi-nhuan') { 
-            if(currentRole === 'admin') renderFinance(); 
-            else Swal.fire('Lỗi', 'Bạn không có quyền xem mục này!', 'error');
-        }
+        else if(name === 'loi-nhuan') { renderFinance(); }
     }
 
     function addRow(theme, tabName) {
         const id = Date.now();
         const row = `<div class="order-row ${theme} row g-1" id="row-${id}">
-            <div class="col-12 mb-1"><input list="plist" onchange="updateRow(${id}, this.value, '${tabName}')" class="form-control" placeholder="Tên sản phẩm..."></div>
+            <div class="col-12 mb-1"><input list="plist" onchange="updateRow(${id}, this.value, '${tabName}')" class="form-control" placeholder="Tên sp..."></div>
             <div class="col-4"><input type="number" id="q-${id}" onchange="calc('${tabName}')" class="form-control text-center" value="1"></div>
             <div class="col-6 text-end pt-1">
                 <div class="stock-info" id="s-${id}">Kho còn: 0</div>
@@ -196,27 +194,33 @@
             Swal.fire({title: 'Xong!', icon: 'success', timer: 800, showConfirmButton: false});
             openTab(type === 'Bán hàng' ? 'ban-hang' : (type === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang'));
             refreshProducts(); refreshHistory();
-        } catch(e) { Swal.fire('Lỗi', 'Không thể lưu đơn', 'error'); btn.disabled = false; }
+        } catch(e) { Swal.fire('Lỗi', 'Không lưu được', 'error'); btn.disabled = false; }
     }
 
     function renderFinance() {
         const now = new Date();
         const todayStr = now.toLocaleDateString('vi-VN');
-        let dRev = 0, dProfit = 0, mRev = 0, mProfit = 0;
+        let dRev = 0, dProfit = 0, dCost = 0;
+        let mRev = 0, mProfit = 0, mCost = 0;
+        
         historyData.forEach(x => {
-            if(x.loi !== "Nhập hàng") {
-                const d = new Date(x.thoigian);
-                const amt = Number(x.thanhtien), lãi = Number(x.loi_nhuan);
-                if(d.toLocaleDateString('vi-VN') === todayStr) { dRev += amt; dProfit += lãi; }
-                if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) { mRev += amt; mProfit += lãi; }
-            }
+            const d = new Date(x.thoigian);
+            const amt = Number(x.thanhtien); 
+            const lãi = Number(x.loi_nhuan); 
+            const chi = Number(x.chi_phi_nhap || 0);
+
+            if(d.toLocaleDateString('vi-VN') === todayStr) { dRev += amt; dProfit += lãi; dCost += chi; }
+            if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) { mRev += amt; mProfit += lãi; mCost += chi; }
         });
-        document.getElementById('main-content').innerHTML = `<h5 class="fw-bold mb-3" style="color:var(--tai-chinh)">💰 THỐNG KÊ (ADMIN)</h5>
+
+        document.getElementById('main-content').innerHTML = `<h5 class="fw-bold mb-3" style="color:var(--tai-chinh)">💰 THỐNG KÊ TÀI CHÍNH (XÁM)</h5>
             <div class="row g-2">
                 <div class="col-6"><div class="stat-card shadow-sm"><small>D.Thu ngày</small><div class="stat-val text-primary">${fM(dRev)}</div></div></div>
-                <div class="col-6"><div class="stat-card shadow-sm"><small>Lãi ngày</small><div class="stat-val text-success">${fM(dProfit)}</div></div></div>
-                <div class="col-12"><div class="stat-card shadow-sm"><small>D.Thu tháng</small><div class="stat-val text-primary">${fM(mRev)}</div></div></div>
-                <div class="col-12"><div class="stat-card shadow-sm"><small>Lãi tháng</small><div class="stat-val text-success">${fM(mProfit)}</div></div></div>
+                <div class="col-6"><div class="stat-card shadow-sm"><small>Chi nhập ngày</small><div class="stat-val text-danger">${fM(dCost)}</div></div></div>
+                <div class="col-12"><div class="stat-card shadow-sm"><small>Lãi ròng ngày</small><div class="stat-val text-success">${fM(dProfit)}</div></div></div>
+                <div class="col-12 mt-2"><div class="stat-card shadow-sm"><small>Doanh thu tháng</small><div class="stat-val text-primary">${fM(mRev)}</div></div></div>
+                <div class="col-12"><div class="stat-card shadow-sm"><small>Tổng chi nhập tháng</small><div class="stat-val text-danger">${fM(mCost)}</div></div></div>
+                <div class="col-12"><div class="stat-card shadow-sm"><small>Lợi nhuận ròng tháng</small><div class="stat-val text-success">${fM(mProfit)}</div></div></div>
             </div>`;
     }
 
@@ -225,7 +229,7 @@
             [...historyData].reverse().slice(0,10).map(x => `<div class="card p-3 mb-2 border-0 shadow-sm small">
                 <div class="d-flex justify-content-between mb-1"><b>${x.madon}</b> <span class="badge bg-light text-dark">${x.pt_thanhtoan}</span></div>
                 <div class="text-primary">${x.ten_sp} (x${x.sl})</div>
-                <div class="text-end fw-bold ${x.loi==='Nhập hàng'?'text-muted':'text-danger'}">${x.loi==='Nhập hàng'?'(Đơn nhập)':fM(x.thanhtien)}</div>
+                <div class="text-end fw-bold ${x.loi==='Nhập hàng'?'text-muted':'text-danger'}">${x.loi==='Nhập hàng'?'(Chi phí nhập)':fM(x.thanhtien)}</div>
             </div>`).join('');
     }
 
