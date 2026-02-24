@@ -3,103 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Professional - Vũng Tàu Aquarium</title>
+    <title>POS Pro Mobile - Vũng Tàu Aquarium</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root { --primary-color: #0d6efd; --bg-light: #f4f7f6; }
-        body { background: var(--bg-light); font-family: 'Segoe UI', Roboto, sans-serif; }
+        :root { --ban-hang: #28a745; --nhap-hang: #007bff; --tra-hang: #dc3545; }
+        body { background: #f0f2f5; font-family: -apple-system, sans-serif; }
         .hidden { display: none; }
         
-        /* Đăng nhập chuyên nghiệp */
-        .login-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; overflow: hidden; }
-        .login-header { background: linear-gradient(45deg, #0d6efd, #00d2ff); color: #fff; padding: 30px; }
+        /* Giao diện Mobile tối ưu */
+        .order-row { 
+            background: #fff; padding: 15px; border-radius: 12px; 
+            margin-bottom: 10px; border-left: 8px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .ban-hang-theme { border-left-color: var(--ban-hang) !important; }
+        .nhap-hang-theme { border-left-color: var(--nhap-hang) !important; }
+        .tra-hang-theme { border-left-color: var(--tra-hang) !important; }
+
+        .btn-lg-mobile { padding: 12px; font-weight: bold; border-radius: 10px; }
+        .price-text { color: #666; font-size: 0.9rem; }
         
-        /* Dashboard & Content */
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .order-row { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--primary-color); transition: 0.3s; }
-        .order-row:hover { transform: translateX(5px); }
-        
-        /* Menu Ngăn kéo */
-        .menu-btn { font-size: 1.5rem; cursor: pointer; border: none; background: none; transition: 0.2s; }
-        .menu-btn:hover { color: var(--primary-color); }
-        .sidebar-btn { width: 100%; text-align: left; padding: 15px 25px; border: none; background: none; border-bottom: 1px solid #f0f0f0; transition: 0.3s; font-size: 1rem; color: #444; }
-        .sidebar-btn:hover { background: #f8faff; color: var(--primary-color); padding-left: 35px; }
-        
-        /* Tiện ích */
-        .time-display { font-size: 1.2rem; font-weight: bold; color: var(--primary-color); }
-        .alert-item { background: #fff5f5; border-left: 4px solid #ff4d4f; padding: 10px; border-radius: 8px; margin-bottom: 5px; font-size: 0.9rem; }
+        /* Header & Sidebar */
+        .header-pos { background: #fff; padding: 12px; border-bottom: 1px solid #ddd; }
+        .sidebar-btn { 
+            width: 100%; text-align: left; padding: 18px 25px; 
+            border: none; background: none; border-bottom: 1px solid #f0f0f0; 
+            font-size: 1.1rem;
+        }
+
+        /* Dashboad Alert */
+        .alert-card { background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container py-5">
-    <div id="login-box" class="row justify-content-center">
-        <div class="col-md-5 col-lg-4">
-            <div class="login-card">
-                <div class="login-header text-center">
-                    <h3 class="fw-bold m-0">ĐĂNG NHẬP</h3>
-                    <p class="small m-0 opacity-75">Hệ thống quản lý cá cảnh chuyên nghiệp</p>
+<div class="container-fluid p-0">
+    <div id="login-box" class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-11 col-md-4 card p-4 text-center shadow-lg border-0" style="border-radius: 20px;">
+                <h3 class="fw-bold text-primary mb-4">POS AQUARIUM</h3>
+                <input type="text" id="u" class="form-control mb-3 py-3" placeholder="Tài khoản">
+                <input type="password" id="p" class="form-control mb-3 py-3" placeholder="Mật khẩu">
+                <div class="form-check text-start mb-4">
+                    <input class="form-check-input" type="checkbox" id="remember">
+                    <label class="form-check-label small" for="remember">Ghi nhớ đăng nhập</label>
                 </div>
-                <div class="p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tài khoản</label>
-                        <input type="text" id="u" class="form-control form-control-lg" placeholder="Nhập username...">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Mật khẩu</label>
-                        <input type="password" id="p" class="form-control form-control-lg" placeholder="Nhập password...">
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="remember">
-                            <label class="form-check-label small" for="remember">Ghi nhớ tôi</label>
-                        </div>
-                    </div>
-                    <button onclick="login()" class="btn btn-primary btn-lg w-100 fw-bold mb-2 shadow-sm">ĐĂNG NHẬP</button>
-                    <div id="auto-login-area" class="hidden text-center">
-                        <button onclick="autoLogin()" class="btn btn-outline-secondary btn-sm w-100">Dùng tài khoản đã lưu</button>
-                    </div>
+                <button onclick="login()" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">ĐĂNG NHẬP</button>
+                <div id="auto-login-area" class="hidden mt-3">
+                    <button onclick="autoLoginPrompt()" class="btn btn-light btn-sm w-100">Dùng tài khoản đã lưu</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="main-app" class="hidden">
-        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-pill shadow-sm">
+        <div class="header-pos d-flex justify-content-between align-items-center sticky-top">
             <div class="d-flex align-items-center">
-                <button class="menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">☰</button>
-                <span class="ms-2 small text-muted">Chào, <b id="u-display" class="text-dark"></b></span>
+                <button class="fs-3 border-0 bg-transparent me-2" data-bs-toggle="offcanvas" data-bs-target="#menu">☰</button>
+                <div>
+                    <div class="small text-muted">Chào, <b id="u-display"></b></div>
+                    <div id="clock-header" style="font-size: 0.75rem; font-weight: bold; color: #0d6efd;"></div>
+                </div>
             </div>
-            <button onclick="location.reload()" class="btn btn-light btn-sm rounded-pill px-3">Thoát</button>
-        </header>
+            <button onclick="location.reload()" class="btn btn-outline-danger btn-sm">Thoát</button>
+        </div>
 
-        <div id="content" class="card p-4 min-vh-50">
-            <div id="dashboard" class="text-center py-4">
-                <div class="time-display mb-2" id="clock">Đang tải thời gian...</div>
-                <div class="text-muted small mb-4" id="date-now"></div>
-                <hr>
-                <h6 class="text-start fw-bold text-danger mb-3">🔥 CẢNH BÁO SẮP HẾT HÀNG (Dưới 5 món)</h6>
-                <div id="low-stock-list" class="text-start">
-                    </div>
+        <div class="p-3" id="main-content">
+            <div id="dashboard">
+                <div class="alert-card shadow-sm border-start border-danger border-4">
+                    <h6 class="fw-bold text-danger mb-3">🔥 CẢNH BÁO HẾT HÀNG</h6>
+                    <div id="low-stock-list">Đang kiểm tra...</div>
+                </div>
+                <div class="text-center text-muted mt-5 px-4">
+                    <p>Bấm menu ☰ để chọn nghiệp vụ Bán hoặc Nhập hàng.</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu">
-    <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title fw-bold text-primary">DANH MỤC</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="menu" style="width: 280px;">
+    <div class="offcanvas-header bg-dark text-white">
+        <h5 class="offcanvas-title fw-bold">DANH MỤC</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body p-0">
-        <button class="sidebar-btn" onclick="handleMenuClick('ban-hang')">🛍️ Bán Hàng (Xuất)</button>
-        <button class="sidebar-btn" onclick="handleMenuClick('nhap-hang')">📦 Nhập Hàng (Cộng)</button>
-        <button class="sidebar-btn text-danger fw-bold" onclick="handleMenuClick('tra-hang')">↩️ Khách Trả Hàng</button>
-        <button class="sidebar-btn" onclick="handleMenuClick('lich-su')">📜 Nhật Ký & Xóa Đơn</button>
-        <button class="sidebar-btn" onclick="handleMenuClick('bao-cao-kho')">📊 Xem Báo Cáo Kho</button>
-        <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="handleMenuClick('loi-nhuan')">💰 Tài Chính & Lợi Nhuận</button>
+        <button class="sidebar-btn" onclick="openTab('ban-hang')">🛍️ Bán Hàng (Xuất)</button>
+        <button class="sidebar-btn" onclick="openTab('nhap-hang')">📦 Nhập Hàng (Cộng)</button>
+        <button class="sidebar-btn text-danger fw-bold" onclick="openTab('tra-hang')">↩️ Khách Trả Hàng</button>
+        <button class="sidebar-btn" onclick="openTab('lich-su')">📜 Nhật Ký & Xóa Đơn</button>
+        <button class="sidebar-btn" onclick="openTab('bao-cao-kho')">📊 Xem Báo Cáo Kho</button>
+        <button id="admin-btn" class="sidebar-btn bg-warning-subtle text-danger fw-bold hidden" onclick="openTab('loi-nhuan')">💰 Tài Chính & Lãi</button>
     </div>
 </div>
 
@@ -107,129 +103,110 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7quu8A47WBW2w4XWC3_sqDwez-E8FwB6UUigNGjBDAWFl9_lyp0MHSv2VRMF9a14TTQ/exec";
     let currentUser = "", currentRole = "", productList = [];
 
-    // Kiểm tra thông tin đã lưu khi mở App
-    window.onload = function() {
-        const savedU = localStorage.getItem('pos_user');
-        if(savedU) {
+    window.onload = () => {
+        const saved = localStorage.getItem('pos_user');
+        if(saved) {
             document.getElementById('auto-login-area').classList.remove('hidden');
-            document.getElementById('u').value = savedU;
+            document.getElementById('u').value = saved;
         }
-        updateClock();
-        setInterval(updateClock, 1000);
+        updateTime(); setInterval(updateTime, 1000);
     };
 
-    function updateClock() {
-        const now = new Date();
-        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
-                        now.getMinutes().toString().padStart(2, '0') + ":" + 
-                        now.getSeconds().toString().padStart(2, '0');
-        const dateStr = "Thứ " + (now.getDay() + 1) + ", ngày " + now.getDate() + " tháng " + (now.getMonth() + 1) + " năm " + now.getFullYear();
-        if(document.getElementById('clock')) document.getElementById('clock').innerText = timeStr;
-        if(document.getElementById('date-now')) document.getElementById('date-now').innerText = dateStr;
+    function updateTime() {
+        const n = new Date();
+        const s = n.getHours().toString().padStart(2,'0') + ":" + n.getMinutes().toString().padStart(2,'0') + ":" + n.getSeconds().toString().padStart(2,'0');
+        if(document.getElementById('clock-header')) document.getElementById('clock-header').innerText = s;
     }
 
     async function login() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
-        const remember = document.getElementById('remember').checked;
-        
-        Swal.fire({ title: 'Đang xác thực...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        
+        Swal.fire({title: 'Đang đăng nhập...', didOpen: () => Swal.showLoading()});
         try {
-            const res = await fetch(`${SCRIPT_URL}?action=login`, { method: 'POST', body: JSON.stringify({u, p}) }).then(r => r.json());
-            Swal.close();
-            if(res.status === 'success') {
-                if(remember) localStorage.setItem('pos_user', u);
-                currentUser = u; currentRole = res.role;
-                initApp();
-            } else { Swal.fire('Lỗi', 'Thông tin đăng nhập sai!', 'error'); }
-        } catch(e) { Swal.fire('Lỗi', 'Không thể kết nối Server!', 'error'); }
+            const r = await fetch(`${SCRIPT_URL}?action=login`, {method: 'POST', body: JSON.stringify({u, p})}).then(res => res.json());
+            if(r.status === 'success') {
+                if(document.getElementById('remember').checked) localStorage.setItem('pos_user', u);
+                currentUser = u; currentRole = r.role;
+                initApp(); Swal.close();
+            } else { Swal.fire('Lỗi', 'Sai tài khoản hoặc mật khẩu', 'error'); }
+        } catch(e) { Swal.fire('Lỗi kết nối', '', 'error'); }
     }
 
-    function autoLogin() {
-        Swal.fire('Vui lòng nhập mật khẩu', '', 'info').then(() => {
-            document.getElementById('p').focus();
-        });
-    }
+    function autoLoginPrompt() { Swal.fire('Vui lòng nhập mật khẩu', '', 'info').then(() => document.getElementById('p').focus()); }
 
     async function initApp() {
         document.getElementById('login-box').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
         document.getElementById('u-display').innerText = currentUser;
         if(currentRole === 'admin') document.getElementById('admin-btn').classList.remove('hidden');
-        await loadProducts();
-        renderDashboard();
+        await refreshData();
     }
 
-    async function loadProducts() { 
-        productList = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json()); 
+    async function refreshData() {
+        productList = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json());
+        renderAlerts();
     }
 
-    function renderDashboard() {
-        const listArea = document.getElementById('low-stock-list');
-        listArea.innerHTML = "";
-        const lowStock = productList.filter(p => p.ton_kho < 5);
-        if(lowStock.length === 0) {
-            listArea.innerHTML = "<p class='text-success small'>✅ Kho hàng hiện tại đang đầy đủ.</p>";
-        } else {
-            lowStock.forEach(p => {
-                listArea.innerHTML += `<div class="alert-item d-flex justify-content-between">
-                    <span>${p.ten}</span>
-                    <b class="text-danger">Còn: ${p.ton_kho}</b>
-                </div>`;
-            });
-        }
+    function renderAlerts() {
+        const low = productList.filter(p => p.ton_kho < 5);
+        document.getElementById('low-stock-list').innerHTML = low.length ? 
+            low.map(p => `<div class="d-flex justify-content-between border-bottom py-2"><span>${p.ten}</span><b class="text-danger">${p.ton_kho}</b></div>`).join('') : 
+            "<p class='text-success small m-0'>Đầy đủ hàng</p>";
     }
 
-    function handleMenuClick(tabName) {
-        bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenu')).hide();
-        showTab(tabName);
-    }
-
-    function showTab(name) {
-        let content = document.getElementById('content');
+    function openTab(name) {
+        bootstrap.Offcanvas.getInstance(document.getElementById('menu')).hide();
+        const content = document.getElementById('main-content');
+        
         if(['ban-hang', 'nhap-hang', 'tra-hang'].includes(name)) {
-            let type = name === 'ban-hang' ? "Bán hàng" : (name === 'nhap-hang' ? "Nhập hàng" : "Khách trả hàng");
-            content.innerHTML = `<h4 class="fw-bold mb-4">${type}</h4>
+            const type = name === 'ban-hang' ? "Bán hàng" : (name === 'nhap-hang' ? "Nhập hàng" : "Khách trả hàng");
+            const theme = name === 'ban-hang' ? "ban-hang-theme" : (name === 'nhap-hang' ? "nhap-hang-theme" : "tra-hang-theme");
+            const btnColor = name === 'ban-hang' ? "btn-success" : (name === 'nhap-hang' ? "btn-primary" : "btn-danger");
+            
+            content.innerHTML = `<h4 class="fw-bold mb-3">${type}</h4>
                 <div id="items-list"></div>
-                <button onclick="addRow()" class="btn btn-outline-primary btn-sm mb-3">+ Thêm món</button>
-                <div class="p-3 bg-light rounded-4 shadow-sm">
+                <button onclick="addRow('${theme}')" class="btn btn-outline-secondary w-100 mb-4 py-2">+ Thêm sản phẩm</button>
+                <div class="card p-3 shadow-sm border-0 mb-5" style="border-radius:15px; background: #fff;">
                     <div class="mb-3">
-                        <label class="small fw-bold mb-2">Thanh toán:</label>
-                        <div class="btn-group w-100">
-                            <input type="radio" class="btn-check" name="method" id="m1" value="Tiền mặt" checked>
-                            <label class="btn btn-outline-secondary" for="m1">💵 Tiền mặt</label>
-                            <input type="radio" class="btn-check" name="method" id="m2" value="Chuyển khoản">
-                            <label class="btn btn-outline-secondary" for="m2">🏦 Bank</label>
-                        </div>
+                        <label class="small fw-bold mb-2">Hình thức:</label>
+                        <select id="p-method" class="form-select form-select-lg">
+                            <option value="Tiền mặt">💵 Tiền mặt</option>
+                            <option value="Chuyển khoản">🏦 Chuyển khoản (Bank)</option>
+                        </select>
                     </div>
-                    <h5 class="text-end mb-3">Tổng cộng: <span id="total-bill" class="text-danger fw-bold fs-3">0</span> đ</h5>
-                    <button onclick="sendOrder('${type}')" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill">XÁC NHẬN LƯU</button>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">TỔNG CỘNG:</span>
+                        <span id="total-bill" class="fs-3 fw-bold text-danger">0</span>
+                    </div>
+                    <button onclick="submitOrder('${type}')" class="btn ${btnColor} w-100 py-3 fw-bold rounded-pill">XÁC NHẬN LƯU</button>
                 </div>`;
-            addRow();
-        } 
-        else if(name === 'lich-su') { loadHistory(); }
-        else if(name === 'bao-cao-kho') { renderStockTable(); }
-        else if(name === 'loi-nhuan') { loadFinanceReport(); }
+            addRow(theme);
+        } else if(name === 'lich-su') { renderHistory(); }
+        else if(name === 'bao-cao-kho') { renderStock(); }
+        else if(name === 'loi-nhuan') { renderProfit(); }
     }
 
-    function addRow() {
+    function addRow(theme) {
         const id = Date.now();
-        const row = `<div class="order-row row g-2" id="row-${id}">
-            <div class="col-7"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control" placeholder="Tên sp..."></div>
-            <div class="col-2"><input type="number" id="q-${id}" onchange="calcTotal()" class="form-control text-center" value="1"></div>
-            <div class="col-2 text-end pt-2"><b id="p-${id}">0</b></div>
-            <div class="col-1 text-center"><button onclick="this.parentElement.parentElement.remove();calcTotal()" class="btn text-danger">✕</button></div>
+        const row = `<div class="order-row ${theme} row g-1" id="row-${id}">
+            <div class="col-12 mb-2"><input list="plist" onchange="updateRow(${id}, this.value)" class="form-control form-control-lg" placeholder="Chọn tên cá/mồi..."></div>
+            <div class="col-4"><input type="number" id="q-${id}" onchange="calc()" class="form-control form-control-lg text-center" value="1"></div>
+            <div class="col-6 text-end pt-1"><div class="price-text" id="unit-${id}">0 đ</div><b class="fs-5" id="p-${id}">0</b></div>
+            <div class="col-2 text-center"><button onclick="this.parentElement.parentElement.remove();calc()" class="btn btn-link text-danger fs-4 mt-1">✕</button></div>
         </div>`;
         document.getElementById('items-list').insertAdjacentHTML('beforeend', row);
-        updateDataList();
+        updateDatalist();
     }
 
     function updateRow(id, val) {
         const p = productList.find(x => x.ten === val);
-        if(p) { document.getElementById(`p-${id}`).innerText = p.gia_ban; calcTotal(); }
+        if(p) {
+            document.getElementById(`unit-${id}`).innerText = p.gia_ban.toLocaleString() + " đ";
+            document.getElementById(`p-${id}`).innerText = p.gia_ban;
+            calc();
+        }
     }
 
-    function calcTotal() {
+    function calc() {
         let t = 0;
         document.querySelectorAll('.order-row').forEach(r => {
             const id = r.id.split('-')[1];
@@ -238,90 +215,53 @@
         document.getElementById('total-bill').innerText = t.toLocaleString();
     }
 
-    async function sendOrder(type) {
-        const method = document.querySelector('input[name="method"]:checked').value;
+    async function submitOrder(type) {
+        const method = document.getElementById('p-method').value;
         const items = [];
         document.querySelectorAll('.order-row').forEach(r => {
-            const id = r.id.split('-')[1], ten = r.querySelector('input').value.trim(), sl = Number(document.getElementById(`q-${id}`).value);
-            if(ten) items.push({ ten, sl, gia: Number(document.getElementById(`p-${id}`).innerText) });
+            const id = r.id.split('-')[1], ten = r.querySelector('input').value, sl = Number(document.getElementById(`q-${id}`).value);
+            if(ten) items.push({ten, sl, gia: Number(document.getElementById(`p-${id}`).innerText)});
         });
-        if(items.length === 0) return;
+        if(!items.length) return;
         
-        Swal.fire({ title: 'Đang lưu...', didOpen: () => Swal.showLoading() });
-        await fetch(`${SCRIPT_URL}?action=saveOrder`, { method: 'POST', body: JSON.stringify({user: currentUser, type, method, items}) });
-        await loadProducts();
-        Swal.fire('Thành công!', '', 'success');
-        showTab(name === 'Bán hàng' ? 'ban-hang' : (name === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang'));
+        Swal.fire({title: 'Đang lưu...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+        await fetch(`${SCRIPT_URL}?action=saveOrder`, {method: 'POST', body: JSON.stringify({user: currentUser, type, method, items})});
+        await refreshData();
+        Swal.fire('Thành công', '', 'success');
+        openTab(type === 'Bán hàng' ? 'ban-hang' : (type === 'Nhập hàng' ? 'nhap-hang' : 'tra-hang'));
     }
 
-    function renderStockTable() {
-        let html = `<h4 class="fw-bold mb-3">📦 Báo Cáo Tồn Kho</h4>
-                    <input type="text" id="stock-search" class="form-control mb-3" placeholder="Tìm nhanh sản phẩm..." onkeyup="filterStock()">
-                    <div class="stock-table-container">
-                        <table class="table table-hover border">
-                            <thead class="table-light sticky-top"><tr><th>Tên</th><th>Tồn</th></tr></thead>
-                            <tbody id="stock-body">`;
-        productList.forEach(p => {
-            const lowClass = p.ton_kho < 5 ? 'low-stock' : '';
-            html += `<tr><td>${p.ten}</td><td class="${lowClass}">${p.ton_kho}</td></tr>`;
+    async function renderHistory() {
+        const h = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        let html = `<h4 class="fw-bold mb-3">📜 Nhật ký</h4>`;
+        h.reverse().slice(0,15).forEach((x, i) => {
+            html += `<div class="card p-3 mb-2 border-0 shadow-sm small">
+                <div class="d-flex justify-content-between"><b>${x.madon}</b> <span>${x.pt_thanhtoan}</span></div>
+                <div class="text-primary">${x.ten_sp} (x${x.sl})</div>
+                <div class="d-flex justify-content-between mt-1"><span>${new Date(x.thoigian).toLocaleTimeString()}</span> <b class="text-danger">${Number(x.thanhtien).toLocaleString()} đ</b></div>
+            </div>`;
         });
-        html += `</tbody></table></div>`;
-        document.getElementById('content').innerHTML = html;
+        document.getElementById('main-content').innerHTML = html;
     }
 
-    function filterStock() {
-        let val = document.getElementById('stock-search').value.toLowerCase();
-        let rows = document.getElementById('stock-body').getElementsByTagName('tr');
-        for (let row of rows) {
-            row.style.display = row.cells[0].innerText.toLowerCase().includes(val) ? "" : "none";
-        }
+    function renderStock() {
+        let html = `<h4 class="fw-bold mb-3">📊 Tồn kho</h4><input type="text" class="form-control mb-3" placeholder="Tìm kiếm..." onkeyup="filter(this.value)">
+            <div id="s-list">` + productList.map(p => `<div class="card p-2 mb-1 border-0 shadow-sm d-flex flex-row justify-content-between">
+                <span>${p.ten}</span><b class="${p.ton_kho < 5 ? 'text-danger' : ''}">${p.ton_kho}</b>
+            </div>`).join('') + `</div>`;
+        document.getElementById('main-content').innerHTML = html;
     }
 
-    async function loadHistory() {
-        const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
-        let h = `<h4 class="fw-bold mb-3">📜 Nhật Ký</h4><table class="table table-sm"><thead><tr><th>Đơn</th><th>Tiền</th><th></th></tr></thead><tbody>`;
-        hist.reverse().slice(0, 15).forEach((x, i) => {
-            h += `<tr><td><small>${x.madon}</small></td><td>${Number(x.thanhtien).toLocaleString()}</td>
-            <td><button onclick="deleteRow(${hist.length - i})" class="btn text-danger p-0">🗑️</button></td></tr>`;
+    function filter(v) {
+        document.querySelectorAll('#s-list .card').forEach(c => {
+            c.style.display = c.innerText.toLowerCase().includes(v.toLowerCase()) ? "flex" : "none";
         });
-        document.getElementById('content').innerHTML = h + `</tbody></table>`;
     }
 
-    async function deleteRow(idx) {
-        const res = await Swal.fire({ title: 'Xóa đơn này?', icon: 'warning', showCancelButton: true });
-        if(res.isConfirmed) {
-            Swal.showLoading();
-            await fetch(`${SCRIPT_URL}?action=deleteOrder`, { method: 'POST', body: JSON.stringify({row: idx + 1}) });
-            await loadProducts();
-            loadHistory();
-            Swal.fire('Đã xóa!', '', 'success');
-        }
-    }
-
-    async function loadFinanceReport() {
-        const hist = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
-        let dCash = 0, dBank = 0, mProfit = 0;
-        const now = new Date();
-        hist.forEach(x => {
-            const d = new Date(x.thoigian);
-            if(d.toDateString() === now.toDateString()) {
-                if(x.pt_thanhtoan === "Tiền mặt") dCash += Number(x.thanhtien);
-                else dBank += Number(x.thanhtien);
-            }
-            if(d.getMonth() === now.getMonth()) mProfit += Number(x.loi_nhuan);
-        });
-        document.getElementById('content').innerHTML = `<h4>💰 Tài Chính</h4>
-            <div class="row g-2 mb-3">
-                <div class="col-6"><div class="card p-3 bg-primary text-white">Mặt:<br><b>${dCash.toLocaleString()}</b></div></div>
-                <div class="col-6"><div class="card p-3 bg-info text-white">Bank:<br><b>${dBank.toLocaleString()}</b></div></div>
-            </div>
-            <div class="card p-3 bg-success text-white text-center"><h5>Lãi Tháng: ${mProfit.toLocaleString()} đ</h5></div>`;
-    }
-
-    function updateDataList() {
-        let dl = document.getElementById('plist') || document.createElement('datalist');
-        dl.id = 'plist'; dl.innerHTML = productList.map(p => `<option value="${p.ten}">`).join('');
-        document.body.appendChild(dl);
+    function updateDatalist() {
+        let d = document.getElementById('plist') || document.createElement('datalist');
+        d.id = 'plist'; d.innerHTML = productList.map(p => `<option value="${p.ten}">`).join('');
+        document.body.appendChild(d);
     }
 </script>
 </body>
