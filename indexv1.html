@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Aquarium v12.5 - Tường</title>
+    <title>POS Aquarium v12.6 - Tường</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,7 +11,7 @@
         :root { --ban: #28a745; --nhap: #007bff; --tra: #dc3545; --tai-chinh: #6c757d; }
         body { background: #f0f2f5; font-family: -apple-system, sans-serif; }
         .hidden { display: none; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--nhap); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--nhap); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .order-row { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 8px solid #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .ban-theme { border-left-color: var(--ban) !important; }
@@ -29,14 +29,14 @@
             <h3 class="fw-black text-primary mb-4 italic">POS AQUARIUM</h3>
             <input type="text" id="u" class="form-control mb-3 py-3 rounded-4" placeholder="Tài khoản">
             <input type="password" id="p" class="form-control mb-3 py-3 rounded-4" placeholder="Mật khẩu">
-            <button onclick="login()" id="btn-login" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow">ĐĂNG NHẬP</button>
+            <button onclick="login()" id="btn-login" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">ĐĂNG NHẬP</button>
         </div>
     </div>
 </div>
 
 <div id="loading-screen" class="hidden container py-5 text-center">
     <div class="loader"></div>
-    <h5 class="fw-bold text-primary animate-pulse">ĐANG TẢI HỆ THỐNG...</h5>
+    <h5 class="fw-bold text-primary animate-pulse italic">ĐANG TẢI HỆ THỐNG...</h5>
 </div>
 
 <div id="main-app" class="hidden">
@@ -62,7 +62,7 @@
     <div class="offcanvas-body p-0">
         <button class="sidebar-item" onclick="openTab('ban-hang')">🛍️ Bán Hàng</button>
         <button id="nhap-btn-menu" class="sidebar-item hidden text-primary" onclick="openTab('nhap-hang')">📦 Nhập Hàng</button>
-        <button class="sidebar-item text-danger" onclick="openTab('tra-hang')">↩️ Khách Trả Hàng</button>
+        <button class="sidebar-item text-danger" onclick="openTab('tra-hang')">↩️ Trả Hàng</button>
         <hr class="m-0">
         <button class="sidebar-item" onclick="openTab('lich-su')">📜 Nhật Ký Giao Dịch</button>
         <button class="sidebar-item" onclick="openTab('bao-cao-kho')">📊 Kiểm Tra Kho</button>
@@ -72,7 +72,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyltxCymhw9m5Bg06FPTJjsRJ3317IJaPMQGTEeuTkfwF5Otetr8_9ns_tY1mT0rPLpYA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzxoBQUiB_kFO24UZNop7xtF56d4WeujuToyvdlB7e11SbvcX51y_vCQrRoOg4G_tV6w/exec";
     let currentUser = "", currentRole = "", productList = [], historyData = [];
 
     function fM(n) { return Number(n || 0).toLocaleString('vi-VN') + " đ"; }
@@ -81,11 +81,9 @@
         const u = document.getElementById('u').value.trim();
         const p = document.getElementById('p').value.trim();
         const btn = document.getElementById('btn-login');
-        if(!u || !p) return Swal.fire('Thiếu thông tin!', '', 'warning');
-        
-        btn.disabled = true; btn.innerText = "Đang kiểm tra...";
+        if(!u || !p) return Swal.fire('Nhập đủ thông tin!', '', 'warning');
+        btn.disabled = true; btn.innerText = "Xác thực...";
         try {
-            // Chuyển sang dùng GET cho Login để tránh lỗi CORS mạng
             const r = await fetch(`${SCRIPT_URL}?action=login&u=${u}&p=${p}`).then(res => res.json());
             if(r.status === 'success') {
                 currentUser = u; currentRole = r.role;
@@ -101,8 +99,8 @@
                         document.getElementById('nhap-btn-menu').classList.remove('hidden');
                     }
                 }, 1500);
-            } else { Swal.fire('Sai mật khẩu!', '', 'error'); btn.disabled = false; btn.innerText = "ĐĂNG NHẬP"; }
-        } catch(e) { Swal.fire('Lỗi kết nối!', 'Vui lòng kiểm tra quyền "Anyone" trên Apps Script', 'error'); btn.disabled = false; }
+            } else { Swal.fire('Sai pass!', '', 'error'); btn.disabled = false; btn.innerText = "ĐĂNG NHẬP"; }
+        } catch(e) { Swal.fire('Lỗi kết nối!', 'Vui lòng Deploy Anyone', 'error'); btn.disabled = false; }
     }
 
     async function refreshProducts() { 
@@ -120,7 +118,7 @@
     }
 
     function openTab(name) {
-        bootstrap.Offcanvas.getInstance(document.getElementById('menu')).hide();
+        const off = bootstrap.Offcanvas.getInstance(document.getElementById('menu')); if(off) off.hide();
         const content = document.getElementById('main-content');
         if(['ban-hang', 'nhap-hang', 'tra-hang'].includes(name)) {
             const type = name === 'ban-hang' ? "Bán hàng" : (name === 'nhap-hang' ? "Nhập hàng" : "Khách trả hàng");
@@ -158,15 +156,14 @@
     function updateRow(id, val, tabName) {
         const p = productList.find(x => x.ten === val);
         if(p) {
-            document.getElementById(`p-input-${id}`).value = (tabName === 'nhap-hang') ? 0 : p.gia_ban;
-            document.getElementById(`s-${id}`).innerText = "Kho hiện tại: " + p.ton_kho;
+            document.getElementById(`p-input-${id}`).value = (tabName === 'nhap-hang') ? 0 : (p.gia_ban || p["giá bán"]);
+            document.getElementById(`s-${id}`).innerText = "Kho hiện tại: " + (p.ton_kho || p["tồn kho"]);
         } else { document.getElementById(`s-${id}`).innerText = "Hàng mới ✨"; }
         calc();
     }
 
     function calc() {
-        let t = 0;
-        document.querySelectorAll('.order-row').forEach(r => {
+        let t = 0; document.querySelectorAll('.order-row').forEach(r => {
             const id = r.id.split('-')[1];
             t += (Number(document.getElementById(`q-${id}`).value) * Number(document.getElementById(`p-input-${id}`).value));
         });
@@ -197,11 +194,12 @@
         const now = new Date(); const todayStr = now.toLocaleDateString('vi-VN');
         let dRev = 0, dProfit = 0, dCost = 0, mRev = 0, mProfit = 0;
         historyData.forEach(x => {
-            const d = new Date(x.thoigian); const amt = Number(x.thanhtien || 0), lãi = Number(x.loi_nhuan || 0), chi = Number(x["C. Phí Nhập"] || 0);
+            const d = new Date(x["thời gian"] || x.thoigian); 
+            const amt = Number(x["thành tiền"] || x.thanhtien || 0), lãi = Number(x["loi_nhuan"] || x.loi_nhuan || 0), chi = Number(x["C. Phí Nhập"] || x.chiphi || 0);
             if(d.toLocaleDateString('vi-VN') === todayStr) { dRev += amt; dProfit += lãi; dCost += chi; }
             if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) { mRev += amt; mProfit += lãi; }
         });
-        document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 uppercase">💰 TÀI CHÍNH</h5><div class="row g-2">
+        document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 uppercase italic text-primary">💰 TÀI CHÍNH</h5><div class="row g-2">
             <div class="col-6"><div class="stat-card"><small>Doanh thu ngày</small><div class="stat-val text-primary">${fM(dRev)}</div></div></div>
             <div class="col-6"><div class="stat-card"><small>Vốn nhập ngày</small><div class="stat-val text-danger">${fM(dCost)}</div></div></div>
             <div class="col-12"><div class="stat-card" style="border-top-color:var(--ban)"><small>Lợi nhuận ngày</small><div class="stat-val text-success">${fM(dProfit)}</div></div></div>
@@ -212,30 +210,30 @@
 
     function renderHistory() {
         const list = [...historyData].reverse().slice(0,20);
-        document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 uppercase italic">📜 20 đơn gần nhất</h5>` + 
+        document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 uppercase italic text-primary">📜 Nhật ký giao dịch</h5>` + 
             list.map(x => `<div class="card p-3 mb-2 border-0 shadow-sm small rounded-4">
                 <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
-                    <b class="${x.loi === 'Nhập hàng' ? 'text-primary' : 'text-success'}">${x.loi.toUpperCase()}</b>
-                    <span class="text-muted" style="font-size:0.7rem">${new Date(x.thoigian).toLocaleString('vi-VN')}</span>
+                    <b class="${(x["loại"] || x.loi) === 'Nhập hàng' ? 'text-primary' : 'text-success'}">${(x["loại"] || x.loi || 'Giao dịch').toUpperCase()}</b>
+                    <span class="text-muted" style="font-size:0.7rem">${new Date(x["thời gian"] || x.thoigian).toLocaleString('vi-VN')}</span>
                 </div>
-                <div class="fw-black text-uppercase">${x.ten_sp} <span class="text-muted fw-normal">x${x.sl}</span></div>
+                <div class="fw-black text-uppercase" style="font-size:0.9rem">${x["tên sp"] || x.ten_sp || "Sản phẩm"} <span class="text-muted fw-normal">x${x.sl || x["số lượng"]}</span></div>
                 <div class="d-flex justify-content-between mt-1 small">
-                    <span>${x.pt_thanhtoan} ${x.ncc ? '| '+x.ncc : ''}</span>
-                    <b class="${x.thanhtien < 0 ? 'text-danger' : 'text-success'}" style="font-size:1rem">${fM(x.thanhtien)}</b>
+                    <span>${x["pt thanh toán"] || x.method || "---"} ${x["nhà cung cấp"] || x.ncc ? '| NCC: '+(x["nhà cung cấp"] || x.ncc) : ''}</span>
+                    <b class="${(x["thành tiền"] || x.thanhtien) < 0 ? 'text-danger' : 'text-success'}" style="font-size:1rem">${fM(x["thành tiền"] || x.thanhtien)}</b>
                 </div>
             </div>`).join('');
     }
 
     function renderStock() {
         document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 uppercase italic text-primary">📊 KIỂM TRA TỒN KHO</h5>
-            <input type="text" id="stockSearch" onkeyup="filterStock()" class="form-control mb-3 rounded-pill px-4" placeholder="🔍 Tìm theo mã KP hoặc tên SP...">
+            <input type="text" id="stockSearch" onkeyup="filterStock()" class="form-control mb-3 rounded-pill px-4" placeholder="🔍 Tìm theo mã hoặc tên...">
             <div id="stock-list-container">
                 ${productList.map(p => `<div class="card p-3 mb-2 border-0 shadow-sm d-flex flex-row justify-content-between align-items-center stock-item rounded-4">
                     <div>
-                        <div class="fw-black text-primary" style="font-size: 1.4rem; line-height: 1;">${p.id || '---'}</div>
-                        <div class="text-muted text-uppercase mt-1 small fw-bold" style="font-size: 0.75rem;">${p.ten}</div>
+                        <div class="fw-black text-primary" style="font-size: 1.4rem; line-height: 1;">${p.id || p["mã sp"] || '---'}</div>
+                        <div class="text-muted text-uppercase mt-1 small fw-bold" style="font-size: 0.75rem;">${p.ten || p["tên sp"]}</div>
                     </div>
-                    <span class="badge ${p.ton_kho<5?'bg-danger':'bg-success'} rounded-pill px-3 py-2 shadow-sm">${p.ton_kho} ${p.dvt||''}</span>
+                    <span class="badge ${(p.ton_kho || p["tồn kho"]) < 5 ? 'bg-danger' : 'bg-success'} rounded-pill px-3 py-2 shadow-sm">${p.ton_kho || p["tồn kho"]} ${p.dvt || ''}</span>
                 </div>`).join('')}
             </div>`;
     }
