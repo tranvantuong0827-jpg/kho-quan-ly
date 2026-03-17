@@ -270,13 +270,23 @@
 
     function renderStock() {
         document.getElementById('main-content').innerHTML = `
-            <h5 class="fw-bold mb-3 uppercase">📊 KIỂM TRA TỒN KHO</h5>
-            <input type="text" id="stockSearch" onkeyup="filterStock()" class="form-control mb-3 rounded-pill px-4" placeholder="🔍 Tìm tên sản phẩm...">
+            <h5 class="fw-bold mb-3 uppercase italic text-primary">📊 KIỂM TRA TỒN KHO</h5>
+            <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden">
+                <span class="input-group-text border-0 bg-white ps-3">🔍</span>
+                <input type="text" id="stockSearch" onkeyup="filterStock()" class="form-control border-0 p-3" placeholder="Tìm tên hoặc mã KP...">
+            </div>
             <div id="stock-list-container">
                 ${productList.map(p => `
-                    <div class="card p-3 mb-2 border-0 shadow-sm d-flex flex-row justify-content-between align-items-center stock-item">
-                        <span class="fw-bold text-uppercase" style="font-size:0.8rem">${p.ten}</span>
-                        <span class="badge ${p.ton_kho < 5 ? 'bg-danger' : 'bg-success'} rounded-pill">${p.ton_kho} ${p.dvt || ''}</span>
+                    <div class="card p-3 mb-2 border-0 shadow-sm d-flex flex-row justify-content-between align-items-center stock-item rounded-4">
+                        <div>
+                            <div class="fw-black text-primary" style="font-size: 1.2rem; line-height: 1;">${p.id || '---'}</div>
+                            <div class="text-muted text-uppercase mt-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">${p.ten}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge ${Number(p.ton_kho) < 5 ? 'bg-danger' : 'bg-success'} rounded-pill px-3 py-2 shadow-sm">
+                                ${p.ton_kho} ${p.dvt || ''}
+                            </span>
+                        </div>
                     </div>`).join('')}
             </div>`;
     }
