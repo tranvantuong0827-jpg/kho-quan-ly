@@ -238,18 +238,76 @@
     }
 
     function renderFinance(c) {
-        let rev = 0, cost = 0, profit = 0;
-        const today = new Date().toLocaleDateString();
-        historyRaw.forEach(h => {
-            if(new Date(h[0]).toLocaleDateString() === today) {
-                rev += (h[2] === 'Bán hàng' ? Number(h[6]) : 0); cost += Number(h[11] || 0); profit += Number(h[10] || 0);
-            }
-        });
-        c.innerHTML = `<h5 class="fw-bold mb-3 text-center">💰 TÀI CHÍNH HÔM NAY</h5>
-            <div class="card-pro p-3 mb-2 border-start border-success border-5"><small>Doanh thu</small><div class="text-success stat-val">${rev.toLocaleString()} đ</div></div>
-            <div class="card-pro p-3 mb-2 border-start border-danger border-5"><small>Tiền nhập</small><div class="text-danger stat-val">${cost.toLocaleString()} đ</div></div>
-            <div class="card-pro p-3 mb-2 border-start border-primary border-5"><small>Lợi nhuận</small><div class="text-primary stat-val">${profit.toLocaleString()} đ</div></div>`;
-    }
+    let dRev = 0, dCost = 0, dProfit = 0; // Daily (Ngày)
+    let mRev = 0, mCost = 0, mProfit = 0; // Monthly (Tháng)
+    
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('vi-VN');
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    historyRaw.forEach(h => {
+        const dateH = new Date(h[0]);
+        const hRev = (h[2] === 'Bán hàng' ? Number(h[6]) : 0);
+        const hCost = Number(h[11] || 0);
+        const hProfit = Number(h[10] || 0);
+
+        // Tính cho Ngày hôm nay
+        if(dateH.toLocaleDateString('vi-VN') === todayStr) {
+            dRev += hRev; dCost += hCost; dProfit += hProfit;
+        }
+
+        // Tính cho Tháng này
+        if(dateH.getMonth() === currentMonth && dateH.getFullYear() === currentYear) {
+            mRev += hRev; mCost += hCost; mProfit += hProfit;
+        }
+    });
+
+    c.innerHTML = `
+        <h5 class="fw-bold mb-3 text-center text-primary">📊 BÁO CÁO TÀI CHÍNH</h5>
+        
+        <div class="card-pro p-3 mb-4 border-top border-primary border-4 shadow-sm">
+            <h6 class="fw-bold text-secondary mb-3">📅 HÔM NAY (${todayStr})</h6>
+            <div class="row text-center">
+                <div class="col-4 border-end">
+                    <small class="text-muted d-block">Doanh thu</small>
+                    <b class="text-success small">${dRev.toLocaleString()}</b>
+                </div>
+                <div class="col-4 border-end">
+                    <small class="text-muted d-block">Chi phí</small>
+                    <b class="text-danger small">${dCost.toLocaleString()}</b>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted d-block">Lợi nhuận</small>
+                    <b class="text-primary small">${dProfit.toLocaleString()}</b>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-pro p-3 mb-2 bg-dark text-white shadow">
+            <h6 class="fw-bold mb-3 text-info">📈 TỔNG KẾT THÁNG ${currentMonth + 1}/${currentYear}</h6>
+            
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <span>💰 Tổng doanh thu:</span>
+                <b class="text-success fs-5">${mRev.toLocaleString()} đ</b>
+            </div>
+            
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <span>💸 Tổng chi phí nhập:</span>
+                <b class="text-warning fs-5">${mCost.toLocaleString()} đ</b>
+            </div>
+            
+            <hr class="bg-secondary">
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-info">💎 LỢI NHUẬN RÒNG:</span>
+                <b class="text-info fs-4">${mProfit.toLocaleString()} đ</b>
+            </div>
+        </div>
+        
+        <p class="text-center text-muted mt-3" style="font-size: 0.7rem;">* Lợi nhuận = (Giá bán - Giá nhập gốc) x Số lượng</p>
+    `;
+}
 </script>
 </body>
 </html>
