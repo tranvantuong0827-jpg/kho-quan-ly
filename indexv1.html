@@ -14,10 +14,19 @@
         .header-ban { background: #28a745; color: white; padding: 15px; border-radius: 15px 15px 0 0; }
         .header-nhap { background: #007bff; color: white; padding: 15px; border-radius: 15px 15px 0 0; }
         .header-tra { background: #ffc107; color: #000; padding: 15px; border-radius: 15px 15px 0 0; }
-        .btn-main { border-radius: 50px; font-weight: 700; padding: 12px; border: none; }
+        .btn-main { border-radius: 50px; font-weight: 700; padding: 12px; border: none; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.95); }
         .sidebar-item { padding: 15px 20px; border: none; background: none; width: 100%; text-align: left; font-weight: 600; border-bottom: 1px solid #f1f1f1; }
         .fw-black { font-weight: 900; }
-        .shadow-inner { box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        /* Hiệu ứng rung khi lỗi */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .input-error { border: 2px solid #dc3545 !important; animation: shake 0.2s ease-in-out 0s 2; }
     </style>
 </head>
 <body>
@@ -56,7 +65,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRK0LcPkqAvn0a7RJE-PjeV42Yv5d5Hl_rzMbCGgeER-ou4tbaH5KyuMvhSAZjVfRZSA/exec";
+    const SCRIPT_URL = "DÁN_LINK_WEB_APP_CỦA_TƯỜNG_VÀO_ĐÂY";
     let currentUser = "", currentRole = "", productRaw = [], historyRaw = [];
 
     async function login() {
@@ -67,8 +76,7 @@
         try {
             const r = await fetch(`${SCRIPT_URL}?action=login&u=${u}&p=${p}`).then(res => res.json());
             if(r.status === 'success') {
-                currentUser = u; 
-                currentRole = r.role;
+                currentUser = u; currentRole = r.role;
                 document.getElementById('login-box').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('u-display').innerText = u;
@@ -78,14 +86,8 @@
                 }
                 await refreshData(); 
                 openTab('ban-hang');
-            } else { 
-                Swal.fire('Lỗi', 'Sai mật khẩu!', 'error'); 
-                btn.disabled = false; 
-            }
-        } catch(e) { 
-            Swal.fire('Lỗi', 'Kết nối thất bại!', 'error'); 
-            btn.disabled = false; 
-        }
+            } else { Swal.fire('Lỗi', 'Sai mật khẩu!', 'error'); btn.disabled = false; }
+        } catch(e) { Swal.fire('Lỗi', 'Kết nối thất bại!', 'error'); btn.disabled = false; }
     }
 
     async function refreshData() {
@@ -105,32 +107,16 @@
     }
 
     function renderOrder(c, tab) {
-        const isBan = (tab === 'ban-hang');
-        const isNhap = (tab === 'nhap-hang');
-        const isTra = (tab === 'tra-hang');
-
+        const isBan = (tab === 'ban-hang'), isNhap = (tab === 'nhap-hang'), isTra = (tab === 'tra-hang');
         let hClass = "header-ban", title = "🛍️ ĐƠN BÁN HÀNG", bClass = "btn-success", bText = "XÁC NHẬN BÁN HÀNG";
-        
-        if(isNhap) { 
-            hClass = "header-nhap"; 
-            title = "📥 ĐƠN NHẬP HÀNG"; 
-            bClass = "btn-primary"; 
-            bText = "XÁC NHẬN NHẬP HÀNG"; 
-        }
-        if(isTra) { 
-            hClass = "header-tra"; 
-            title = "🔄 ĐƠN TRẢ HÀNG"; 
-            bClass = "btn-warning"; 
-            bText = "XÁC NHẬN TRẢ HÀNG"; 
-        }
+        if(isNhap) { hClass = "header-nhap"; title = "📥 ĐƠN NHẬP HÀNG"; bClass = "btn-primary"; bText = "XÁC NHẬN NHẬP HÀNG"; }
+        if(isTra) { hClass = "header-tra"; title = "🔄 ĐƠN TRẢ HÀNG"; bClass = "btn-warning"; bText = "XÁC NHẬN TRẢ HÀNG"; }
 
         c.innerHTML = `
             <div class="card-pro mb-3">
-                <div class="${hClass} text-center shadow-sm">
-                    <h5 class="m-0 fw-bold py-1">${title}</h5>
-                </div>
+                <div class="${hClass} text-center shadow-sm"><h5 class="m-0 fw-bold py-1">${title}</h5></div>
                 <div class="p-3">
-                    <label class="small fw-bold text-muted">${isNhap ? 'NHÀ CUNG CẤP (bắt buộc):' : 'TÊN KHÁCH / GHI CHÚ:'}</label>
+                    <label class="small fw-bold text-muted">${isNhap ? 'NHÀ CUNG CẤP (BẮT BUỘC):' : 'TÊN KHÁCH / GHI CHÚ:'}</label>
                     <input type="text" id="order-ncc" class="form-control border-primary fw-bold" placeholder="Nhập tại đây...">
                 </div>
             </div>
@@ -142,9 +128,7 @@
                     <span class="fw-bold">TỔNG TIỀN ĐƠN:</span>
                     <h3 class="fw-bold text-danger m-0" id="total-val">0 đ</h3>
                 </div>
-                <button onclick="saveOrder('${tab}')" id="btn-save" class="btn ${bClass} btn-main w-100 py-3 shadow">
-                    ${bText}
-                </button>
+                <button onclick="saveOrder('${tab}')" id="btn-save" class="btn ${bClass} btn-main w-100 py-3 shadow">${bText}</button>
             </div>`;
         addOrderRow(tab);
     }
@@ -160,11 +144,11 @@
             <div class="row g-2">
                 <div class="col-4">
                     <label class="small text-muted">Số lượng</label>
-                    <input type="number" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="validateOrder('${tab}')">
+                    <input type="number" inputmode="numeric" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="validateOrder('${tab}')">
                 </div>
                 <div class="col-6">
-                    <label class="small text-muted">Đơn giá:(bắt buộc)</label>
-                    <input type="number" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="validateOrder('${tab}')">
+                    <label class="small text-muted">Đơn giá</label>
+                    <input type="number" inputmode="numeric" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="validateOrder('${tab}')">
                 </div>
                 <div class="col-2 d-flex align-items-end">
                     <button onclick="document.getElementById('row-${id}').remove();validateOrder('${tab}')" class="btn text-danger fw-bold pb-2">✕</button>
@@ -178,28 +162,16 @@
 
     function updateDataList() {
         if(!document.getElementById('plist')) {
-            const dl = document.createElement('datalist'); 
-            dl.id = 'plist'; 
-            document.body.appendChild(dl);
+            const dl = document.createElement('datalist'); dl.id = 'plist'; document.body.appendChild(dl);
         }
         document.getElementById('plist').innerHTML = productRaw.map(v => `<option value="${v[1]}">`).join('');
     }
 
     function showProductPicker(id, tab) {
         let options = {};
-        productRaw.forEach(p => { 
-            options[p[1]] = `${p[1]} (Tồn: ${p[3]})`; 
-        });
-        Swal.fire({ 
-            title: 'Chọn sản phẩm', 
-            input: 'select', 
-            inputOptions: options, 
-            showCancelButton: true 
-        }).then((r) => {
-            if (r.value) { 
-                document.getElementById(`t-${id}`).value = r.value; 
-                updateInfo(id, tab); 
-            }
+        productRaw.forEach(p => { options[p[1]] = `${p[1]} (Tồn: ${p[3]})`; });
+        Swal.fire({ title: 'Chọn sản phẩm', input: 'select', inputOptions: options, showCancelButton: true }).then((r) => {
+            if (r.value) { document.getElementById(`t-${id}`).value = r.value; updateInfo(id, tab); }
         });
     }
 
@@ -208,12 +180,11 @@
         const p = productRaw.find(x => x[1].toString().toLowerCase() === ten.toLowerCase());
         const infoBox = document.getElementById(`info-${id}`);
         if(p) {
-            // Nếu là nhập hàng thì lấy giá nhập h[4], còn lại lấy giá bán h[5]
             document.getElementById(`p-${id}`).value = (tab === 'nhap-hang') ? p[4] : p[5];
-            infoBox.innerHTML = `📦 Kho: <span id="stock-val-${id}">${p[3]}</span> | Giá: ${Number(p[5]).toLocaleString()}đ`;
+            infoBox.innerHTML = `📦 Kho: <span id="stock-val-${id}">${p[3]}</span> | Giá cũ: ${Number(p[5]).toLocaleString()}đ`;
             infoBox.classList.remove('text-danger');
         } else {
-            infoBox.innerHTML = (tab === 'ban-hang') ? "❌ Ko có hàng trong kho" : "🆕 Sản phẩm mới";
+            infoBox.innerHTML = (tab === 'ban-hang') ? "❌ Ko có hàng" : "🆕 Sản phẩm mới";
             if(tab === 'ban-hang') infoBox.classList.add('text-danger');
         }
         validateOrder(tab);
@@ -221,258 +192,135 @@
 
     function validateOrder(tab) {
         let total = 0, hasError = false;
-        const isBan = (tab === 'ban-hang');
         document.querySelectorAll('[id^="row-"]').forEach(r => {
             const id = r.id.split('-')[1];
             const q = Number(document.getElementById(`q-${id}`).value);
             const p = Number(document.getElementById(`p-${id}`).value);
-            const infoBox = document.getElementById(`info-${id}`);
             const stockEl = document.getElementById(`stock-val-${id}`);
             total += (q * p);
-            if (isBan && stockEl && q > Number(stockEl.innerText)) { 
-                infoBox.classList.add('text-danger'); 
-                hasError = true; 
-            } else if(isBan && stockEl) { 
-                infoBox.classList.remove('text-danger'); 
-            }
+            if (tab === 'ban-hang' && stockEl && q > Number(stockEl.innerText)) hasError = true;
         });
         document.getElementById('total-val').innerText = total.toLocaleString() + " đ";
-        document.getElementById('btn-save').disabled = (isBan && hasError);
-        document.getElementById('stock-warning').classList.toggle('hidden', !(isBan && hasError));
+        document.getElementById('btn-save').disabled = (tab === 'ban-hang' && hasError);
+        document.getElementById('stock-warning').classList.toggle('hidden', !(tab === 'ban-hang' && hasError));
     }
 
     async function saveOrder(tab) {
-        const items = [];
         const nccInput = document.getElementById('order-ncc');
         const ncc = nccInput.value.trim();
-        
-        // 1. KIỂM TRA BẮT BUỘC NHÀ CUNG CẤP KHI NHẬP HÀNG
+        const items = [];
+        let checkPrice = true;
+
         if (tab === 'nhap-hang' && !ncc) {
-            return Swal.fire('Thiếu thông tin', 'Vui lòng nhập TÊN NHÀ CUNG CẤP trước khi lưu!', 'warning');
+            if (navigator.vibrate) navigator.vibrate(200);
+            nccInput.classList.add('input-error');
+            setTimeout(() => nccInput.classList.remove('input-error'), 1000);
+            return Swal.fire('Thiếu NCC', 'Nhập hàng bắt buộc phải điền Nhà Cung Cấp!', 'warning');
         }
 
-        let typeName = (tab === 'nhap-hang') ? "Nhập hàng" : (tab === 'tra-hang' ? "Trả hàng" : "Bán hàng");
-
-        let checkPrice = true;
         document.querySelectorAll('[id^="row-"]').forEach(r => {
             const id = r.id.split('-')[1];
+            const pInput = document.getElementById(`p-${id}`);
             const ten = document.getElementById(`t-${id}`).value;
             const sl = Number(document.getElementById(`q-${id}`).value);
-            const gia = Number(document.getElementById(`p-${id}`).value);
-            
+            const gia = Number(pInput.value);
             if(ten && sl > 0) {
-                // 2. KIỂM TRA BẮT BUỘC ĐƠN GIÁ (PHẢI LỚN HƠN 0)
                 if (gia <= 0) {
                     checkPrice = false;
-                    document.getElementById(`p-${id}`).classList.add('is-invalid'); // Bôi đỏ ô giá lỗi
-                } else {
-                    document.getElementById(`p-${id}`).classList.remove('is-invalid');
+                    pInput.classList.add('input-error');
+                    setTimeout(() => pInput.classList.remove('input-error'), 1000);
                 }
                 items.push({ten, sl, gia});
             }
         });
 
         if(!checkPrice) {
-            return Swal.fire('Lỗi Đơn Giá', 'Có sản phẩm chưa nhập giá hoặc giá bằng 0. Vui lòng kiểm tra lại!', 'error');
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            return Swal.fire('Lỗi Giá', 'Vui lòng nhập đơn giá lớn hơn 0!', 'error');
         }
+        if(!items.length) return Swal.fire('Trống', 'Chưa chọn sản phẩm!', 'info');
 
-        if(!items.length) {
-            return Swal.fire('Thông báo', 'Vui lòng chọn ít nhất 1 sản phẩm', 'info');
-        }
+        const btn = document.getElementById('btn-save');
+        const oldTxt = btn.innerText;
+        btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ĐANG LƯU...`;
 
-        const btn = document.getElementById('btn-save'); 
-        btn.disabled = true; 
-        btn.innerText = "ĐANG LƯU...";
-        
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    type: typeName, 
-                    user: currentUser, 
-                    ncc: ncc || "Khách lẻ", 
-                    items 
-                }) 
-            }).then(r => r.text());
-            
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: (tab === 'nhap-hang' ? "Nhập hàng" : (tab === 'tra-hang' ? "Trả hàng" : "Bán hàng")), user: currentUser, ncc: ncc || "Khách lẻ", items })}).then(r => r.text());
             if(res.includes("Success")) {
-                Swal.fire({icon:'success', title:'Đã lưu đơn!', timer:1000, showConfirmButton:false});
-                await refreshData(); 
-                
-                // Reset form để làm đơn mới
-                nccInput.value = ""; 
-                document.getElementById('items-list').innerHTML = ""; 
-                addOrderRow(tab); 
-                validateOrder(tab); 
-                
-                btn.disabled = false;
-                btn.innerText = (tab === 'ban-hang') ? "XÁC NHẬN BÁN HÀNG" : (tab === 'nhap-hang' ? "XÁC NHẬN NHẬP HÀNG" : "XÁC NHẬN TRẢ HÀNG");
-            } else { 
-                Swal.fire('Lỗi', res, 'error'); 
-                btn.disabled = false; 
-                btn.innerText = "THỬ LẠI";
-            }
-        } catch(e) { 
-            Swal.fire('Lỗi', 'Mất kết nối Internet', 'error'); 
-            btn.disabled = false; 
-            btn.innerText = "LƯU LẠI";
-        }
+                if (navigator.vibrate) navigator.vibrate(50);
+                Swal.fire({icon:'success', title:'Thành công!', timer:800, showConfirmButton:false});
+                await refreshData();
+                nccInput.value = ""; document.getElementById('items-list').innerHTML = "";
+                addOrderRow(tab); validateOrder(tab);
+                btn.disabled = false; btn.innerText = oldTxt;
+            } else { throw new Error(res); }
+        } catch(e) { Swal.fire('Lỗi', 'Thất bại, hãy thử lại!', 'error'); btn.disabled = false; btn.innerText = "THỬ LẠI"; }
     }
 
     function renderStock(c) {
-        c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-primary">📊 KIỂM KHO (ƯU TIÊN TỒN THẤP)</h5>`;
-        const listHtml = productRaw.map(p => `
+        c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-primary">📊 KIỂM KHO (TỒN THẤP ĐỨNG ĐẦU)</h5>`;
+        c.innerHTML += productRaw.map(p => `
             <div class="card-pro p-3 d-flex justify-content-between align-items-center ${p[3]<5?'border-start border-danger border-5':''}">
-                <div>
-                    <b class="text-uppercase" style="font-size:0.9rem">${p[1]}</b><br>
-                    <small class="text-muted">Cập nhật: ${p[6] || '---'}</small>
-                </div>
-                <div class="text-end">
-                    <span class="badge ${p[3]<5?'bg-danger':'bg-success'} rounded-pill px-3">${p[3]} ${p[2]}</span>
-                    <div class="small fw-bold mt-1 text-primary">${Number(p[5]).toLocaleString()}đ</div>
-                </div>
+                <div><b class="text-uppercase" style="font-size:0.9rem">${p[1]}</b><br><small class="text-muted">Cập nhật: ${p[7] ? new Date(p[7]).toLocaleDateString('vi-VN') : '---'}</small></div>
+                <div class="text-end"><span class="badge ${p[3]<5?'bg-danger':'bg-success'} rounded-pill px-3">${p[3]} ${p[2]}</span><div class="small fw-bold mt-1 text-primary">${Number(p[5]).toLocaleString()}đ</div></div>
             </div>`).join('');
-        c.innerHTML += listHtml;
     }
 
     function renderHistory(c) {
-        c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-uppercase text-primary">📜 NHẬT KÝ GIAO DỊCH</h5>`;
-        
-        // Gom nhóm theo mã giao dịch
+        c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-primary text-uppercase">📜 NHẬT KÝ GIAO DỊCH</h5>`;
         const groups = {};
         historyRaw.forEach(h => {
             const oId = h[1];
-            if (!groups[oId]) { 
-                groups[oId] = { 
-                    time: h[0], 
-                    type: h[2], 
-                    user: h[7], 
-                    ncc: h[12], 
-                    items: [], 
-                    total: 0 
-                }; 
-            }
+            if (!groups[oId]) groups[oId] = { time: h[0], type: h[2], user: h[7], ncc: h[12], items: [], total: 0 };
             groups[oId].items.push({ ten: h[3], sl: h[4], gia: h[5] });
             groups[oId].total += Number(h[6] || 0);
         });
-
-        // Sắp xếp mới nhất lên đầu
         const sorted = Object.keys(groups).sort((a, b) => new Date(groups[b].time) - new Date(groups[a].time));
-        
-        if (!sorted.length) { 
-            c.innerHTML += `<div class="text-center p-5 text-muted">Chưa có giao dịch nào được ghi lại</div>`; 
-            return; 
-        }
-
+        if (!sorted.length) { c.innerHTML += `<div class="text-center p-5 text-muted">Chưa có giao dịch</div>`; return; }
         sorted.forEach(oId => {
             const o = groups[oId];
             let bCls = "bg-success", bTxt = "BÁN";
             if (o.type.includes("Nhập")) { bCls = "bg-primary"; bTxt = "NHẬP"; }
             if (o.type.includes("Trả")) { bCls = "bg-warning text-dark"; bTxt = "TRẢ"; }
-            
-            const htmlOrder = `
-                <div class="card-pro mb-2 shadow-sm border-0 overflow-hidden">
-                    <div class="p-3 d-flex justify-content-between align-items-center" onclick="toggleOrderDetail('${oId}')" style="cursor:pointer; background:#fff;">
-                        <div>
-                            <span class="badge ${bCls} me-2" style="font-size:0.6rem">${bTxt}</span>
-                            <span class="fw-bold text-muted small">#${oId.slice(-6)}</span>
-                            <div class="fw-bold text-dark mt-1" style="font-size:0.85rem">
-                                ${o.items[0].ten} ${o.items.length > 1 ? '<span class="text-primary">+' + (o.items.length - 1) + ' món</span>' : ''}
-                            </div>
-                            <small class="text-muted" style="font-size:0.7rem">
-                                🕒 ${new Date(o.time).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})} - ${new Date(o.time).toLocaleDateString('vi-VN')}
-                            </small>
-                        </div>
-                        <div class="text-end">
-                            <b class="${o.total >= 0 ? 'text-success' : 'text-danger'}" style="font-size:1.1rem">
-                                ${Math.abs(o.total).toLocaleString()}đ
-                            </b><br>
-                            <small class="text-muted" style="font-size:0.6rem">Chi tiết ▼</small>
-                        </div>
+            c.innerHTML += `
+                <div class="card-pro mb-2 overflow-hidden shadow-sm" onclick="toggleOrderDetail('${oId}')">
+                    <div class="p-3 d-flex justify-content-between align-items-center">
+                        <div><span class="badge ${bCls} me-2" style="font-size:0.6rem">${bTxt}</span><span class="fw-bold text-muted small">#${oId.slice(-6)}</span><div class="fw-bold text-dark mt-1" style="font-size:0.85rem">${o.items[0].ten} ${o.items.length > 1 ? '<span class="text-primary">+' + (o.items.length - 1) + ' món</span>' : ''}</div><small class="text-muted" style="font-size:0.7rem">🕒 ${new Date(o.time).toLocaleTimeString('vi-VN')} - ${new Date(o.time).toLocaleDateString('vi-VN')}</small></div>
+                        <div class="text-end"><b class="${o.total >= 0 ? 'text-success' : 'text-danger'}" style="font-size:1.1rem">${Math.abs(o.total).toLocaleString()}đ</b><br><small class="text-muted" style="font-size:0.6rem">Chi tiết ▼</small></div>
                     </div>
-                    <div id="detail-${oId}" class="hidden p-3 border-top bg-light shadow-inner">
-                        <div class="small fw-bold mb-2 text-secondary border-bottom">DANH SÁCH MẶT HÀNG:</div>
-                        ${o.items.map(i => `
-                            <div class="small d-flex justify-content-between mb-1">
-                                <span>• ${i.ten} <b class="text-dark">x${i.sl}</b></span>
-                                <span>${Number(i.gia).toLocaleString()}đ</span>
-                            </div>`).join('')}
-                        <div class="mt-2 pt-2 border-top text-muted d-flex justify-content-between" style="font-size:0.7rem">
-                            <span>NV: ${o.user}</span>
-                            <span>Đối tác: ${o.ncc || 'Khách lẻ'}</span>
-                        </div>
+                    <div id="detail-${oId}" class="hidden p-3 border-top bg-light">
+                        ${o.items.map(i => `<div class="small d-flex justify-content-between mb-1"><span>• ${i.ten} <b>x${i.sl}</b></span><span>${Number(i.gia).toLocaleString()}đ</span></div>`).join('')}
+                        <div class="mt-2 pt-2 border-top text-muted d-flex justify-content-between" style="font-size:0.7rem"><span>NV: ${o.user}</span><span>Đối tác: ${o.ncc || 'Khách lẻ'}</span></div>
                     </div>
                 </div>`;
-            c.innerHTML += htmlOrder;
         });
     }
 
-    function toggleOrderDetail(id) {
-        const el = document.getElementById(`detail-${id}`);
-        if(el) el.classList.toggle('hidden');
-    }
+    function toggleOrderDetail(id) { document.getElementById(`detail-${id}`)?.classList.toggle('hidden'); }
 
     function renderFinance(c) {
         let dRev = 0, dCost = 0, dProfit = 0, mRev = 0, mCost = 0, mProfit = 0;
-        const now = new Date();
-        const today = now.toLocaleDateString('vi-VN');
-        const m = now.getMonth();
-        const y = now.getFullYear();
-
+        const now = new Date(), today = now.toLocaleDateString('vi-VN'), m = now.getMonth(), y = now.getFullYear();
         historyRaw.forEach(h => {
             if(!h[0]) return;
-            const dt = new Date(h[0]);
-            const hRev = (h[2] === 'Bán hàng' ? Number(h[6]) : 0);
-            const hCost = Number(h[11] || 0);
-            const hProfit = Number(h[10] || 0);
-
-            if(dt.toLocaleDateString('vi-VN') === today) { 
-                dRev += hRev; dCost += hCost; dProfit += hProfit; 
-            }
-            if(dt.getMonth() === m && dt.getFullYear() === y) { 
-                mRev += hRev; mCost += hCost; mProfit += hProfit; 
-            }
+            const dt = new Date(h[0]), hRev = (h[2] === 'Bán hàng' ? Number(h[6]) : 0), hCost = Number(h[11] || 0), hProfit = Number(h[10] || 0);
+            if(dt.toLocaleDateString('vi-VN') === today) { dRev += hRev; dCost += hCost; dProfit += hProfit; }
+            if(dt.getMonth() === m && dt.getFullYear() === y) { mRev += hRev; mCost += hCost; mProfit += hProfit; }
         });
-
         c.innerHTML = `
             <h5 class="fw-bold mb-3 text-center text-primary">📊 BÁO CÁO TÀI CHÍNH</h5>
             <div class="card-pro p-3 mb-4 border-top border-primary border-4 shadow-sm">
                 <h6 class="fw-bold text-secondary mb-3 text-center">📅 HÔM NAY (${today})</h6>
-                <div class="row text-center small">
-                    <div class="col-4 border-end">
-                        <small class="text-muted d-block text-uppercase" style="font-size:0.6rem">Doanh thu</small>
-                        <b class="text-success">${dRev.toLocaleString()}</b>
-                    </div>
-                    <div class="col-4 border-end">
-                        <small class="text-muted d-block text-uppercase" style="font-size:0.6rem">Giá nhập</small>
-                        <b class="text-danger">${dCost.toLocaleString()}</b>
-                    </div>
-                    <div class="col-4">
-                        <small class="text-muted d-block text-uppercase" style="font-size:0.6rem">Lợi nhuận</small>
-                        <b class="text-primary">${dProfit.toLocaleString()}</b>
-                    </div>
-                </div>
+                <div class="row text-center small"><div class="col-4 border-end"><small class="text-muted d-block" style="font-size:0.6rem">DOANH THU</small><b class="text-success">${dRev.toLocaleString()}</b></div><div class="col-4 border-end"><small class="text-muted d-block" style="font-size:0.6rem">GIÁ VỐN</small><b class="text-danger">${dCost.toLocaleString()}</b></div><div class="col-4"><small class="text-muted d-block" style="font-size:0.6rem">LỢI NHUẬN</small><b class="text-primary">${dProfit.toLocaleString()}</b></div></div>
             </div>
             <div class="card-pro p-3 bg-dark text-white shadow" style="border-radius:20px">
                 <h6 class="fw-bold mb-3 text-info">📈 TỔNG KẾT THÁNG ${m + 1}/${y}</h6>
-                <div class="d-flex justify-content-between mb-3">
-                    <span>💰 Tổng doanh thu:</span>
-                    <b class="text-success fs-5">${mRev.toLocaleString()} đ</b>
-                </div>
-                <div class="d-flex justify-content-between mb-3">
-                    <span>💸 Tiền nhập hàng:</span>
-                    <b class="text-warning fs-5">${mCost.toLocaleString()} đ</b>
-                </div>
+                <div class="d-flex justify-content-between mb-3"><span>💰 Tổng doanh thu:</span><b class="text-success fs-5">${mRev.toLocaleString()} đ</b></div>
+                <div class="d-flex justify-content-between mb-3"><span>💸 Tiền nhập hàng:</span><b class="text-warning fs-5">${mCost.toLocaleString()} đ</b></div>
                 <hr class="bg-secondary">
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <span class="fw-bold text-info fs-6">💎 LỢI NHUẬN RÒNG:</span>
-                    <b class="text-info fs-3 fw-black">${mProfit.toLocaleString()} đ</b>
-                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3"><span class="fw-bold text-info fs-6">💎 LỢI NHUẬN RÒNG:</span><b class="text-info fs-3 fw-black">${mProfit.toLocaleString()} đ</b></div>
             </div>
-            <p class="text-center text-muted mt-3" style="font-size: 0.7rem;">* Lợi nhuận = (Giá bán - Giá nhập gốc) x Số lượng</p>
-            <div class="text-center mt-4">
-                <button onclick="refreshData().then(()=>openTab('loi-nhuan'))" class="btn btn-sm btn-outline-secondary rounded-pill px-4">🔄 Làm mới số liệu</button>
-            </div>`;
+            <div class="text-center mt-4"><button onclick="refreshData().then(()=>openTab('loi-nhuan'))" class="btn btn-sm btn-outline-secondary rounded-pill px-4">🔄 Làm mới số liệu</button></div>`;
     }
 </script>
 </body>
