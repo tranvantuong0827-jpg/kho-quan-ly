@@ -229,13 +229,90 @@
     }
 
     function renderHistory(c) {
-        c.innerHTML = `<h5 class="fw-bold mb-3 text-center">📜 NHẬT KÝ</h5>` + [...historyRaw].reverse().slice(0,30).map(h => `
-            <div class="card-pro p-3 small">
-                <div class="d-flex justify-content-between text-muted"><span>${h[1]}</span><span>${new Date(h[0]).toLocaleTimeString()}</span></div>
-                <div class="fw-bold text-uppercase my-1">${h[3]} x${h[4]}</div>
-                <div class="d-flex justify-content-between"><span>Tồn sau: <b>${h[9]}</b></span><b class="${h[2]=='Bán hàng'?'text-success':'text-danger'}">${Math.abs(h[6]).toLocaleString()} đ</b></div>
-            </div>`).join('');
+    c.innerHTML = `<h5 class="fw-bold mb-3 text-center">📜 NHẬT KÝ GIAO DỊCH</h5>`;
+    
+    // 1. Gom nhóm sản phẩm theo Mã đơn (h[1])
+    const groups = {};
+    historyRaw.forEach(h => {
+        const orderId = h[1];
+        if (!groups[orderId]) {
+            groups[orderId] = {
+                time: h[0],
+                type: h[2], // Bán hàng, Nhập hàng...
+                user: h[7],
+                ncc: h[12],
+                items: [],
+                totalMoney: 0
+            };
+        }
+        groups[orderId].items.push({ ten: h[3], sl: h[4], gia: h[5], thanhTien: h[6] });
+        groups[orderId].totalMoney += Number(h[6] || 0);
+    });
+
+    // 2. Chuyển thành mảng và đảo ngược để đơn mới nhất lên đầu
+    const sortedOrders = Object.keys(groups).sort().reverse();
+
+    if (sortedOrders.length === 0) {
+        c.innerHTML += `<div class="text-center text-muted">Chưa có giao dịch nào</div>`;
+        return;
     }
+
+    // 3. Hiển thị từng Đơn hàng
+    sortedOrders.forEach(orderId => {
+        const order = groups[orderId];
+        let badgeClass = "bg-success"; // Mặc định Bán
+        let typeLabel = "BÁN";
+        
+        if (order.type.includes("Nhập")) { badgeClass = "bg-primary"; typeLabel = "NHẬP"; }
+        if (order.type.includes("Trả")) { badgeClass = "bg-warning text-dark"; typeLabel = "TRẢ"; }
+
+        const htmlOrder = `
+            <div class="card-pro mb-2 shadow-sm border-0" style="overflow: hidden;">
+                <div class="p-3 d-flex justify-content-between align-items-center" 
+                     onclick="toggleOrderDetail('${orderId}')" style="cursor: pointer; background: #fff;">
+                    <div>
+                        <span class="fw-bold small text-muted">#${orderId.slice(-6)}</span>
+                        <span class="badge ${badgeClass} ms-1" style="font-size: 0.65rem;">${typeLabel}</span>
+                        <div class="fw-bold text-dark mt-1">${order.items[0].ten} ${order.items.length > 1 ? 'và ' + (order.items.length - 1) + ' món khác...' : ''}</div>
+                        <small class="text-muted" style="font-size: 0.7rem;">${new Date(order.time).toLocaleString('vi-VN')}</small>
+                    </div>
+                    <div class="text-end">
+                        <b class="${order.totalMoney >= 0 ? 'text-success' : 'text-danger'} fs-6">
+                            ${Math.abs(order.totalMoney).toLocaleString()} đ
+                        </b>
+                        <div style="font-size: 0.7rem;" class="text-muted">▼</div>
+                    </div>
+                </div>
+
+                <div id="detail-${orderId}" class="hidden bg-light p-3 border-top">
+                    <div class="small mb-2 text-primary fw-bold border-bottom pb-1">CHI TIẾT ĐƠN HÀNG:</div>
+                    ${order.items.map(item => `
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 0.85rem;">
+                            <span>• ${item.ten} <b class="text-dark">x${item.sl}</b></span>
+                            <span class="text-muted">${Number(item.gia).toLocaleString()} đ</span>
+                        </div>
+                    `).join('')}
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between small">
+                        <span class="text-muted">NV: ${order.user}</span>
+                        <span class="text-muted">Đối tác: ${order.ncc || 'Khách lẻ'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        c.innerHTML += htmlOrder;
+    });
+}
+
+// Hàm hỗ trợ ẩn hiện chi tiết đơn
+function toggleOrderDetail(orderId) {
+    const el = document.getElementById(`detail-${orderId}`);
+    if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+    } else {
+        el.classList.add('hidden');
+    }
+}
 
     function renderFinance(c) {
     let dRev = 0, dCost = 0, dProfit = 0; // Daily (Ngày)
