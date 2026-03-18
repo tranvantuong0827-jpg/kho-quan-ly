@@ -76,7 +76,7 @@
 
 <script>
     // DÁN LINK WEB APP CỦA TƯỜNG VÀO ĐÂY
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5lImTwbvWnYRe8oddEN0Q_L8xQOlJxxIYQcT12_zPR49EjRpth9cbkG2WrTtAxKWv4A/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVzyA1eTUzqyWezMLQFwLpakCU_2i7cqGvw07ertpVREzNeslAc-Z_i-v7BfH5dGyBLg/exec";
     let currentUser = "", currentRole = "", productRaw = [], historyRaw = [];
 
     async function login() {
@@ -234,22 +234,7 @@
         
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: (isNhap ? "Nhập hàng" : (tab === 'tra-hang' ? "Trả hàng" : "Bán hàng")), user: currentUser, ncc: ncc || "Khách lẻ", items })}).then(r => r.text());
-
-            // --- CHÈN ĐOẠN KIỂM TRA LỖI KHO Ở ĐÂY ---
-            if (res.includes("Lỗi:")) {
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Rung báo lỗi
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Hết hàng bất ngờ!',
-                    text: res, // Hiển thị nội dung lỗi từ Server (Ví dụ: Cá rồng chỉ còn tồn 0)
-                    confirmButtonText: 'Tải lại kho'
-                });
-                await refreshData(); // Ép app tải lại kho mới nhất ngay lập tức
-                btn.disabled = false;
-                btn.innerText = oldTxt;
-                return; // Dừng lại không chạy tiếp đoạn thành công bên dưới
-            }
-            
+          
             if(res.includes("Success")) { if (navigator.vibrate) navigator.vibrate(50); Swal.fire({icon:'success', title:'Thành công!', timer:800, showConfirmButton:false}); await refreshData(); nccInput.value = ""; document.getElementById('items-list').innerHTML = ""; addOrderRow(tab); validateOrder(tab); btn.disabled = false; btn.innerText = oldTxt; } else { throw new Error(res); }
         } catch(e) { Swal.fire('Lỗi', 'Thất bại, hãy thử lại!', 'error'); btn.disabled = false; btn.innerText = "THỬ LẠI"; }
     }
