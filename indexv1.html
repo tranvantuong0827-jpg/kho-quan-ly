@@ -245,17 +245,36 @@
         const items = [];
         const nccInput = document.getElementById('order-ncc');
         const ncc = nccInput.value.trim();
-        let typeName = "Bán hàng";
-        if (tab === 'nhap-hang') typeName = "Nhập hàng";
-        if (tab === 'tra-hang') typeName = "Trả hàng";
+        
+        // 1. KIỂM TRA BẮT BUỘC NHÀ CUNG CẤP KHI NHẬP HÀNG
+        if (tab === 'nhap-hang' && !ncc) {
+            return Swal.fire('Thiếu thông tin', 'Vui lòng nhập TÊN NHÀ CUNG CẤP trước khi lưu!', 'warning');
+        }
 
+        let typeName = (tab === 'nhap-hang') ? "Nhập hàng" : (tab === 'tra-hang' ? "Trả hàng" : "Bán hàng");
+
+        let checkPrice = true;
         document.querySelectorAll('[id^="row-"]').forEach(r => {
             const id = r.id.split('-')[1];
             const ten = document.getElementById(`t-${id}`).value;
             const sl = Number(document.getElementById(`q-${id}`).value);
             const gia = Number(document.getElementById(`p-${id}`).value);
-            if(ten && sl > 0) items.push({ten, sl, gia});
+            
+            if(ten && sl > 0) {
+                // 2. KIỂM TRA BẮT BUỘC ĐƠN GIÁ (PHẢI LỚN HƠN 0)
+                if (gia <= 0) {
+                    checkPrice = false;
+                    document.getElementById(`p-${id}`).classList.add('is-invalid'); // Bôi đỏ ô giá lỗi
+                } else {
+                    document.getElementById(`p-${id}`).classList.remove('is-invalid');
+                }
+                items.push({ten, sl, gia});
+            }
         });
+
+        if(!checkPrice) {
+            return Swal.fire('Lỗi Đơn Giá', 'Có sản phẩm chưa nhập giá hoặc giá bằng 0. Vui lòng kiểm tra lại!', 'error');
+        }
 
         if(!items.length) {
             return Swal.fire('Thông báo', 'Vui lòng chọn ít nhất 1 sản phẩm', 'info');
@@ -278,19 +297,16 @@
             
             if(res.includes("Success")) {
                 Swal.fire({icon:'success', title:'Đã lưu đơn!', timer:1000, showConfirmButton:false});
-                
-                // Cập nhật lại dữ liệu ngầm (số tồn kho mới...)
                 await refreshData(); 
-
-                // CHỖ NÀY QUAN TRỌNG: Không nhảy Tab nữa mà chỉ làm sạch Form
-                nccInput.value = ""; // Xóa tên khách/NCC cũ
-                document.getElementById('items-list').innerHTML = ""; // Xóa các dòng hàng cũ
-                addOrderRow(tab); // Thêm lại 1 dòng trống mới để làm tiếp
-                validateOrder(tab); // Reset tổng tiền về 0
+                
+                // Reset form để làm đơn mới
+                nccInput.value = ""; 
+                document.getElementById('items-list').innerHTML = ""; 
+                addOrderRow(tab); 
+                validateOrder(tab); 
                 
                 btn.disabled = false;
                 btn.innerText = (tab === 'ban-hang') ? "XÁC NHẬN BÁN HÀNG" : (tab === 'nhap-hang' ? "XÁC NHẬN NHẬP HÀNG" : "XÁC NHẬN TRẢ HÀNG");
-
             } else { 
                 Swal.fire('Lỗi', res, 'error'); 
                 btn.disabled = false; 
