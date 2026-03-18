@@ -229,16 +229,16 @@
     }
 
     function renderHistory(c) {
-    c.innerHTML = `<h5 class="fw-bold mb-3 text-center">📜 NHẬT KÝ GIAO DỊCH</h5>`;
+    c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-uppercase text-primary">📜 Nhật Ký Gần Đây</h5>`;
     
-    // 1. Gom nhóm sản phẩm theo Mã đơn (h[1])
+    // 1. Gom nhóm sản phẩm theo Mã đơn
     const groups = {};
     historyRaw.forEach(h => {
         const orderId = h[1];
         if (!groups[orderId]) {
             groups[orderId] = {
                 time: h[0],
-                type: h[2], // Bán hàng, Nhập hàng...
+                type: h[2],
                 user: h[7],
                 ncc: h[12],
                 items: [],
@@ -249,58 +249,68 @@
         groups[orderId].totalMoney += Number(h[6] || 0);
     });
 
-    // 2. Chuyển thành mảng và đảo ngược để đơn mới nhất lên đầu
-    const sortedOrders = Object.keys(groups).sort().reverse();
+    // Chuyển sang mảng để xử lý
+    const sortedOrders = Object.keys(groups);
 
+    // KIỂM TRA NẾU TRỐNG (Cái Tường hỏi đây)
     if (sortedOrders.length === 0) {
-        c.innerHTML += `<div class="text-center text-muted">Chưa có giao dịch nào</div>`;
+        c.innerHTML += `<div class="text-center text-muted p-5">📭 Chưa có giao dịch nào hôm nay</div>`;
         return;
     }
 
-    // 3. Hiển thị từng Đơn hàng
+    // 2. SẮP XẾP: Thời gian MỚI NHẤT (b) trừ thời gian CŨ (a) => Mới lên đầu
+    sortedOrders.sort((a, b) => {
+        return new Date(groups[b].time) - new Date(groups[a].time);
+    });
+
+    // 3. Hiển thị danh sách từng đơn
     sortedOrders.forEach(orderId => {
         const order = groups[orderId];
-        let badgeClass = "bg-success"; // Mặc định Bán
+        let badgeClass = "bg-success"; 
         let typeLabel = "BÁN";
         
         if (order.type.includes("Nhập")) { badgeClass = "bg-primary"; typeLabel = "NHẬP"; }
         if (order.type.includes("Trả")) { badgeClass = "bg-warning text-dark"; typeLabel = "TRẢ"; }
 
-        const htmlOrder = `
-            <div class="card-pro mb-2 shadow-sm border-0" style="overflow: hidden;">
+        c.innerHTML += `
+            <div class="card-pro mb-2 shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
                 <div class="p-3 d-flex justify-content-between align-items-center" 
-                     onclick="toggleOrderDetail('${orderId}')" style="cursor: pointer; background: #fff;">
+                     onclick="toggleOrderDetail('${orderId}')" style="background: #fff; cursor: pointer;">
                     <div>
-                        <span class="fw-bold small text-muted">#${orderId.slice(-6)}</span>
-                        <span class="badge ${badgeClass} ms-1" style="font-size: 0.65rem;">${typeLabel}</span>
-                        <div class="fw-bold text-dark mt-1">${order.items[0].ten} ${order.items.length > 1 ? 'và ' + (order.items.length - 1) + ' món khác...' : ''}</div>
-                        <small class="text-muted" style="font-size: 0.7rem;">${new Date(order.time).toLocaleString('vi-VN')}</small>
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="badge ${badgeClass} me-2" style="font-size:0.6rem;">${typeLabel}</span>
+                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">#${orderId.slice(-6)}</span>
+                        </div>
+                        <div class="text-dark fw-bold" style="font-size: 0.85rem;">
+                            ${order.items[0].ten} ${order.items.length > 1 ? '<span class="text-primary small">+' + (order.items.length - 1) + ' món</span>' : ''}
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;">
+                             🕒 ${new Date(order.time).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - ${new Date(order.time).toLocaleDateString('vi-VN')}
+                        </small>
                     </div>
                     <div class="text-end">
-                        <b class="${order.totalMoney >= 0 ? 'text-success' : 'text-danger'} fs-6">
-                            ${Math.abs(order.totalMoney).toLocaleString()} đ
-                        </b>
-                        <div style="font-size: 0.7rem;" class="text-muted">▼</div>
+                        <div class="fw-bold ${order.totalMoney >= 0 ? 'text-success' : 'text-danger'}">
+                            ${Math.abs(order.totalMoney).toLocaleString()}đ
+                        </div>
+                        <small class="text-muted" style="font-size: 0.6rem;">Xem chi tiết ▼</small>
                     </div>
                 </div>
 
-                <div id="detail-${orderId}" class="hidden bg-light p-3 border-top">
-                    <div class="small mb-2 text-primary fw-bold border-bottom pb-1">CHI TIẾT ĐƠN HÀNG:</div>
+                <div id="detail-${orderId}" class="hidden p-3 border-top shadow-inner" style="background: #fdfdfd;">
+                    <div class="small mb-2 fw-bold text-secondary" style="font-size: 0.7rem;">DANH SÁCH MÓN:</div>
                     ${order.items.map(item => `
-                        <div class="d-flex justify-content-between mb-1" style="font-size: 0.85rem;">
-                            <span>• ${item.ten} <b class="text-dark">x${item.sl}</b></span>
-                            <span class="text-muted">${Number(item.gia).toLocaleString()} đ</span>
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                            <span>• ${item.ten} <i class="text-muted small">x${item.sl}</i></span>
+                            <span class="fw-bold">${Number(item.gia).toLocaleString()}đ</span>
                         </div>
                     `).join('')}
-                    <hr class="my-2">
-                    <div class="d-flex justify-content-between small">
-                        <span class="text-muted">NV: ${order.user}</span>
-                        <span class="text-muted">Đối tác: ${order.ncc || 'Khách lẻ'}</span>
+                    <div class="mt-2 pt-2 border-top d-flex justify-content-between text-muted" style="font-size: 0.65rem;">
+                        <span>NV: ${order.user}</span>
+                        <span>Đối tác: ${order.ncc || 'Khách lẻ'}</span>
                     </div>
                 </div>
             </div>
         `;
-        c.innerHTML += htmlOrder;
     });
 }
 
