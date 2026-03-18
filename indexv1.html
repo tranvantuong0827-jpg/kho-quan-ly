@@ -130,7 +130,7 @@
                     <h5 class="m-0 fw-bold py-1">${title}</h5>
                 </div>
                 <div class="p-3">
-                    <label class="small fw-bold text-muted">${isNhap ? 'NHÀ CUNG CẤP:' : 'TÊN KHÁCH / GHI CHÚ:'}</label>
+                    <label class="small fw-bold text-muted">${isNhap ? 'NHÀ CUNG CẤP (bắt buộc):' : 'TÊN KHÁCH / GHI CHÚ:'}</label>
                     <input type="text" id="order-ncc" class="form-control border-primary fw-bold" placeholder="Nhập tại đây...">
                 </div>
             </div>
@@ -163,7 +163,7 @@
                     <input type="number" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="validateOrder('${tab}')">
                 </div>
                 <div class="col-6">
-                    <label class="small text-muted">Đơn giá</label>
+                    <label class="small text-muted">Đơn giá:(bắt buộc)</label>
                     <input type="number" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="validateOrder('${tab}')">
                 </div>
                 <div class="col-2 d-flex align-items-end">
