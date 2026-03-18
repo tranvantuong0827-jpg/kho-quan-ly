@@ -3,64 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIM PHÁT CÁ CẢNH - v13.0</title>
+    <title>KIM PHÁT CÁ CẢNH PRO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root { --ban: #28a745; --nhap: #007bff; --tra: #dc3545; --tai-chinh: #6c757d; }
-        body { background: #f0f2f5; font-family: -apple-system, sans-serif; }
+        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; }
+        body { background: #f4f7f6; font-family: sans-serif; }
         .hidden { display: none; }
-        .order-row { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 8px solid #ccc; }
-        .stat-card { background: #fff; border-radius: 15px; padding: 15px; border-top: 4px solid var(--tai-chinh); margin-bottom: 10px; }
-        .stat-val { font-weight: 900; font-size: 1.1rem; }
-        .sidebar-item { padding: 15px 20px; border: none; background: none; width: 100%; text-align: left; border-bottom: 1px solid #f1f1f1; font-weight: 600; }
+        .card-pro { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: none; margin-bottom: 10px; }
+        .nav-top { background: white; padding: 10px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); sticky-top; }
+        .btn-round { border-radius: 50px; font-weight: bold; }
+        .sidebar-item { padding: 15px; border-bottom: 1px solid #eee; width: 100%; text-align: left; background: none; border: none; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div id="login-box" class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-11 col-md-4 card p-4 text-center shadow-lg border-0 rounded-5">
-            <h3 class="fw-bold text-primary mb-4">KIM PHÁT CÁ CẢNH v1</h3>
-            <input type="text" id="u" class="form-control mb-3 py-3 rounded-4" placeholder="Tài khoản">
-            <input type="password" id="p" class="form-control mb-3 py-3 rounded-4" placeholder="Mật khẩu">
-            <button onclick="login()" id="btn-login" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">ĐĂNG NHẬP</button>
-        </div>
-    </div>
+    <div class="row justify-content-center"><div class="col-md-4 card p-4 shadow-sm text-center rounded-4">
+        <h2 class="text-primary fw-bold">KIM PHÁT</h2>
+        <input type="text" id="u" class="form-control mb-3" placeholder="Tên đăng nhập">
+        <input type="password" id="p" class="form-control mb-3" placeholder="Mật khẩu">
+        <button onclick="login()" id="btn-login" class="btn btn-primary w-100 btn-round">VÀO HỆ THỐNG</button>
+    </div></div>
 </div>
 
 <div id="main-app" class="hidden">
-    <nav class="bg-white p-3 d-flex justify-content-between align-items-center sticky-top shadow-sm">
-        <button class="fs-3 border-0 bg-transparent" data-bs-toggle="offcanvas" data-bs-target="#menu">☰</button>
-        <span class="small fw-bold">NV: <span id="u-display" class="text-primary">---</span></span>
-        <div id="clock-header" class="fw-bold small"></div>
-    </nav>
-    <div class="p-3" id="main-content"></div>
+    <div class="nav-top d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-light" data-bs-toggle="offcanvas" data-bs-target="#menu">☰ Menu</button>
+        <span class="fw-bold">Chào, <span id="u-display" class="text-primary">...</span></span>
+    </div>
+    <div class="container" id="main-content"></div>
 </div>
 
 <div class="offcanvas offcanvas-start" id="menu">
-    <div class="offcanvas-header bg-dark text-white"><h6>MENU QUẢN LÝ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button></div>
+    <div class="offcanvas-header bg-dark text-white"><h5 class="m-0">KIM PHÁT CÁ CẢNH</h5></div>
     <div class="offcanvas-body p-0">
         <button class="sidebar-item" onclick="openTab('ban-hang')">🛍️ Bán Hàng</button>
-        <button id="nhap-btn-menu" class="sidebar-item hidden" onclick="openTab('nhap-hang')">📦 Nhập Hàng</button>
-        <button class="sidebar-item" onclick="openTab('lich-su')">📜 Nhật Ký</button>
-        <button class="sidebar-item" onclick="openTab('bao-cao-kho')">📊 Kho Hàng</button>
-        <button id="admin-btn-menu" class="sidebar-item hidden" onclick="openTab('loi-nhuan')">💰 Tài Chính</button>
+        <button id="nhap-btn" class="sidebar-item hidden" onclick="openTab('nhap-hang')">📦 Nhập Hàng</button>
+        <button class="sidebar-item" onclick="openTab('bao-cao-kho')">📊 Kiểm Kho</button>
+        <button class="sidebar-item" onclick="openTab('lich-su')">📜 Lịch Sử Giao Dịch</button>
+        <button id="admin-btn" class="sidebar-item hidden" onclick="openTab('loi-nhuan')">💰 Báo Cáo Tài Chính</button>
     </div>
 </div>
 
 <script>
-    // COPY URL MỚI SAU KHI DEPLOY DÁN VÀO ĐÂY
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQaPGmiGb2pA2oH4ONMwxRG2DvnR-VTraU6SyMVrVjswn_7fjbXJ62TkLSjMYZEeueiA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi80PIN7t6WQaIlychrpV9dERWFOtUS4R596oF09FOMzczQb-J7yYCw2WS7xcSPpn3zA/exec";
     let currentUser = "", currentRole = "", productRaw = [], historyRaw = [];
-
-    function fM(n) { return Number(n || 0).toLocaleString('vi-VN') + " đ"; }
 
     async function login() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
-        const btn = document.getElementById('btn-login');
-        btn.innerText = "Đang tải..."; btn.disabled = true;
+        const btn = document.getElementById('btn-login'); btn.disabled = true;
         try {
             const r = await fetch(`${SCRIPT_URL}?action=login&u=${u}&p=${p}`).then(res => res.json());
             if(r.status === 'success') {
@@ -68,14 +61,10 @@
                 document.getElementById('login-box').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('u-display').innerText = u;
-                if(r.role === 'admin') {
-                    document.getElementById('admin-btn-menu').classList.remove('hidden');
-                    document.getElementById('nhap-btn-menu').classList.remove('hidden');
-                }
-                await refreshData();
-                openTab('ban-hang');
-            } else { Swal.fire('Lỗi', 'Sai mật khẩu!', 'error'); btn.innerText = "ĐĂNG NHẬP"; btn.disabled = false; }
-        } catch(e) { Swal.fire('Lỗi kết nối', 'Kiểm tra lại Deploy!', 'error'); btn.disabled = false; }
+                if(r.role === 'admin') { document.getElementById('nhap-btn').classList.remove('hidden'); document.getElementById('admin-btn').classList.remove('hidden'); }
+                await refreshData(); openTab('ban-hang');
+            } else { Swal.fire('Lỗi', 'Sai tài khoản!', 'error'); btn.disabled = false; }
+        } catch(e) { Swal.fire('Lỗi', 'Kiểm tra mạng/Deploy!', 'error'); btn.disabled = false; }
     }
 
     async function refreshData() {
@@ -84,38 +73,41 @@
     }
 
     function openTab(name) {
-        const off = bootstrap.Offcanvas.getInstance(document.getElementById('menu')); if(off) off.hide();
+        bootstrap.Offcanvas.getInstance(document.getElementById('menu'))?.hide();
         const content = document.getElementById('main-content');
         if(name === 'bao-cao-kho') renderStock(content);
         else if(name === 'lich-su') renderHistory(content);
         else if(name === 'loi-nhuan') renderFinance(content);
-        else if(name === 'ban-hang' || name === 'nhap-hang') renderOrder(content, name);
+        else renderOrder(content, name);
     }
 
-    function renderStock(container) {
-        let html = `<h5 class="fw-bold text-center mb-3">📊 TỒN KHO</h5>`;
+    function renderStock(c) {
+        let h = `<h5 class="fw-bold mb-3">📊 TỒN KHO</h5>`;
         productRaw.values.forEach(p => {
-            html += `<div class="card p-3 mb-2 border-0 shadow-sm d-flex flex-row justify-content-between">
-                <div><b>${p[1]}</b><br><small class="text-muted">${p[0]}</small></div>
-                <span class="badge ${p[3] < 5 ? 'bg-danger':'bg-success'} rounded-pill pt-2">${p[3]} ${p[2]}</span>
+            h += `<div class="card-pro p-3 d-flex justify-content-between align-items-center">
+                <div><b class="text-uppercase">${p[1]}</b><br><small class="text-muted">NCC: ${p[6] || 'N/A'}</small></div>
+                <span class="badge ${p[3] < 5 ? 'bg-danger':'bg-success'} rounded-pill">${p[3]} ${p[2]}</span>
             </div>`;
         });
-        container.innerHTML = html;
+        c.innerHTML = h;
     }
 
-    function renderHistory(container) {
-        let html = `<h5 class="fw-bold text-center mb-3">📜 NHẬT KÝ</h5>`;
-        [...historyRaw.values].reverse().slice(0,20).forEach(h => {
-            html += `<div class="card p-3 mb-2 border-0 shadow-sm small">
-                <div class="d-flex justify-content-between"><b>${h[2]}</b> <small>${new Date(h[0]).toLocaleString('vi-VN')}</small></div>
-                <div>${h[3]} x ${h[4]}</div>
-                <div class="d-flex justify-content-between text-success"><span>${h[12] || ''}</span> <b>${fM(Math.abs(h[6]))}</b></div>
+    function renderHistory(c) {
+        let h = `<h5 class="fw-bold mb-3">📜 LỊCH SỬ</h5>`;
+        [...historyRaw.values].reverse().slice(0,30).forEach(x => {
+            h += `<div class="card-pro p-3">
+                <div class="d-flex justify-content-between small text-muted"><span>${x[1]}</span><span>${new Date(x[0]).toLocaleString('vi-VN')}</span></div>
+                <div class="fw-bold text-uppercase my-1">${x[3]} <span class="text-primary">x${x[4]}</span></div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <small>NCC: ${x[12] || '---'}</small>
+                    <b class="text-success">${Number(Math.abs(x[6])).toLocaleString()} đ</b>
+                </div>
             </div>`;
         });
-        container.innerHTML = html;
+        c.innerHTML = h;
     }
 
-    function renderFinance(container) {
+    function renderFinance(c) {
         let dRev = 0, dProfit = 0, dCost = 0;
         const today = new Date().toLocaleDateString('vi-VN');
         historyRaw.values.forEach(h => {
@@ -123,51 +115,53 @@
                 dRev += Number(h[6] || 0); dProfit += Number(h[10] || 0); dCost += Number(h[11] || 0);
             }
         });
-        container.innerHTML = `
-            <h5 class="fw-bold text-center mb-3">💰 TÀI CHÍNH HÔM NAY</h5>
-            <div class="stat-card"><small>Doanh thu</small><div class="stat-val text-primary">${fM(dRev)}</div></div>
-            <div class="stat-card"><small>Vốn nhập</small><div class="stat-val text-danger">${fM(dCost)}</div></div>
-            <div class="stat-card" style="border-top-color:green"><small>Lợi nhuận</small><div class="stat-val text-success">${fM(dProfit)}</div></div>`;
+        c.innerHTML = `<h5 class="fw-bold mb-3">💰 TÀI CHÍNH HÔM NAY</h5>
+            <div class="card-pro p-3 mb-2 border-start border-primary border-4"><small>Doanh thu</small><h4 class="m-0 fw-bold text-primary">${dRev.toLocaleString()} đ</h4></div>
+            <div class="card-pro p-3 mb-2 border-start border-danger border-4"><small>Tiền nhập hàng</small><h4 class="m-0 fw-bold text-danger">${dCost.toLocaleString()} đ</h4></div>
+            <div class="card-pro p-3 mb-2 border-start border-success border-4"><small>Lợi nhuận dự kiến</small><h4 class="m-0 fw-bold text-success">${dProfit.toLocaleString()} đ</h4></div>`;
     }
 
-    function renderOrder(container, type) {
-        container.innerHTML = `<h5 class="text-center fw-bold">${type==='ban-hang'?'🛍️ BÁN HÀNG':'📦 NHẬP HÀNG'}</h5><div id="items-list"></div><button onclick="addOrderRow()" class="btn btn-outline-primary w-100 mb-3">+ Thêm món</button><button onclick="saveOrder('${type}')" id="btn-save" class="btn btn-success w-100 py-3">XÁC NHẬN LƯU</button>`;
+    function renderOrder(c, type) {
+        c.innerHTML = `<h5 class="fw-bold">${type==='ban-hang'?'🛒 BÁN HÀNG':'📥 NHẬP HÀNG'}</h5>
+            ${type==='nhap-hang'?'<input type="text" id="order-ncc" class="form-control mb-3 border-primary" placeholder="Nhập tên Nhà Cung Cấp...">':''}
+            <div id="items-list"></div>
+            <button onclick="addOrderRow()" class="btn btn-outline-secondary w-100 mb-3">+ Thêm sản phẩm</button>
+            <button onclick="saveOrder('${type}')" id="btn-save" class="btn btn-success w-100 btn-round py-3">XÁC NHẬN GIAO DỊCH</button>`;
         addOrderRow();
     }
-    // Các hàm phụ trợ khác giữ nguyên logic của bạn...
+
     function addOrderRow() {
         const id = Date.now();
-        const html = `<div class="order-row border-primary mb-2 p-2 bg-white rounded-3 shadow-sm" id="row-${id}">
-            <input list="plist" class="form-control mb-1 fw-bold" placeholder="Tên sản phẩm..." id="t-${id}">
-            <div class="row g-1">
+        const h = `<div class="card-pro p-3" id="row-${id}">
+            <input list="plist" class="form-control mb-2 fw-bold" placeholder="Tên sản phẩm..." id="t-${id}">
+            <div class="row g-2">
                 <div class="col-4"><input type="number" class="form-control" placeholder="SL" id="q-${id}" value="1"></div>
                 <div class="col-6"><input type="number" class="form-control" placeholder="Giá" id="p-${id}"></div>
-                <div class="col-2"><button onclick="document.getElementById('row-${id}').remove()" class="btn btn-danger w-100">X</button></div>
+                <div class="col-2"><button onclick="document.getElementById('row-${id}').remove()" class="btn btn-danger w-100">✕</button></div>
             </div>
         </div>`;
-        document.getElementById('items-list').insertAdjacentHTML('beforeend', html);
-        if(!document.getElementById('plist')) {
-            const dl = document.createElement('datalist'); dl.id = 'plist'; document.body.appendChild(dl);
-            dl.innerHTML = productRaw.values.map(p => `<option value="${p[1]}">`).join('');
-        }
+        document.getElementById('items-list').insertAdjacentHTML('beforeend', h);
+        const dl = document.getElementById('plist') || document.body.appendChild(Object.assign(document.createElement('datalist'), {id:'plist'}));
+        dl.innerHTML = productRaw.values.map(p => `<option value="${p[1]}">`).join('');
     }
 
     async function saveOrder(type) {
         const items = [];
-        document.querySelectorAll('.order-row').forEach(r => {
+        const ncc = document.getElementById('order-ncc')?.value || "";
+        document.querySelectorAll('.card-pro[id^="row-"]').forEach(r => {
             const id = r.id.split('-')[1];
             items.push({ ten: document.getElementById(`t-${id}`).value, sl: Number(document.getElementById(`q-${id}`).value), gia: Number(document.getElementById(`p-${id}`).value) });
         });
-        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "Đang lưu...";
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: type==='ban-hang'?'Bán hàng':'Nhập hàng', user: currentUser, method: 'Tiền mặt', items }) }).then(r => r.text());
-        if(res.includes("Success")) {
-            Swal.fire('Xong!', 'Đã lưu vào kho và lịch sử', 'success');
-            await refreshData();
-            openTab('ban-hang');
-        } else { Swal.fire('Lỗi', res, 'error'); btn.disabled = false; }
+        if(items.length === 0) return;
+        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "Đang xử lý...";
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: type==='ban-hang'?'Bán hàng':'Nhập hàng', user: currentUser, ncc: ncc, items }) }).then(r => r.text());
+            if(res.includes("Success")) {
+                Swal.fire('Thành công', 'Đã cập nhật kho và lịch sử!', 'success');
+                await refreshData(); openTab('ban-hang');
+            } else { Swal.fire('Lỗi', res, 'error'); btn.disabled = false; }
+        } catch(e) { Swal.fire('Lỗi', 'Không thể kết nối Server!', 'error'); btn.disabled = false; }
     }
-
-    setInterval(() => { document.getElementById('clock-header').innerText = new Date().toLocaleTimeString('vi-VN'); }, 1000);
 </script>
 </body>
 </html>
