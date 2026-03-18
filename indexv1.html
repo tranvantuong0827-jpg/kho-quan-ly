@@ -8,8 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-        .hidden { display: none; }
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+        .hidden { display: none !important; }
         .card-pro { background: #fff; border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
         .header-ban { background: #28a745; color: white; padding: 15px; border-radius: 15px 15px 0 0; }
         .header-nhap { background: #007bff; color: white; padding: 15px; border-radius: 15px 15px 0 0; }
@@ -17,19 +17,31 @@
         .btn-main { border-radius: 50px; font-weight: 700; padding: 12px; border: none; transition: 0.2s; }
         .btn-main:active { transform: scale(0.95); }
         .sidebar-item { padding: 15px 20px; border: none; background: none; width: 100%; text-align: left; font-weight: 600; border-bottom: 1px solid #f1f1f1; }
-        .fw-black { font-weight: 900; }
-        /* Hiệu ứng rung khi lỗi */
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
-        }
+        /* Hiệu ứng Rung */
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
         .input-error { border: 2px solid #dc3545 !important; animation: shake 0.2s ease-in-out 0s 2; }
+        
+        /* MÀN HÌNH CHÀO (NEW) */
+        #welcome-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #007bff, #28a745);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; color: white; transition: opacity 0.5s ease-out;
+        }
+        #welcome-screen h1 { font-size: 3rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .heart-beat { animation: heartbeat 1.5s infinite; font-size: 4rem; margin-bottom: 20px; }
+        @keyframes heartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
+
+<div id="welcome-screen" class="hidden">
+    <div class="heart-beat">💖</div>
+    <h1 class="text-uppercase mb-3">Xin Chào</h1>
+    <h3 class="fw-bold text-warning">Người Đẹp!</h3>
+    <div class="spinner-border text-light mt-4" role="status"></div>
+    <small class="mt-2 text-white-50">App đang tải dữ liệu Pro...</small>
+</div>
 
 <div id="login-box" class="container py-5">
     <div class="row justify-content-center">
@@ -51,9 +63,7 @@
 </div>
 
 <div class="offcanvas offcanvas-start" id="menu">
-    <div class="offcanvas-header bg-dark text-white">
-        <h5 class="m-0">KIM PHÁT CÁ CẢNH</h5>
-    </div>
+    <div class="offcanvas-header bg-dark text-white"><h5 class="m-0">KIM PHÁT CÁ CẢNH</h5></div>
     <div class="offcanvas-body p-0">
         <button class="sidebar-item" onclick="openTab('ban-hang')">🛍️ DANH MỤC BÁN HÀNG</button>
         <button id="nhap-btn" class="sidebar-item hidden text-primary" onclick="openTab('nhap-hang')">📥 DANH MỤC NHẬP HÀNG</button>
@@ -65,31 +75,44 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLLx8VsYYMchsd5-eWiwTIcG34mSj8B1yOxOZQFuoEqz_4AK1g4NKJp9toG7-NPKR_rQ/exec";
+    // DÁN LINK WEB APP CỦA TƯỜNG VÀO ĐÂY
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4cM62I_RPUkvByx1kOQFAYKGAFbTjBS43CdSDqu4HqxOpgm4oGmXwCr0gb6qlDQXg7A/exec";
     let currentUser = "", currentRole = "", productRaw = [], historyRaw = [];
 
     async function login() {
-        const u = document.getElementById('u').value;
-        const p = document.getElementById('p').value;
-        const btn = document.getElementById('btn-login');
-        btn.disabled = true;
+        const u = document.getElementById('u').value, p = document.getElementById('p').value;
+        const btn = document.getElementById('btn-login'); btn.disabled = true;
         try {
             const r = await fetch(`${SCRIPT_URL}?action=login&u=${u}&p=${p}`).then(res => res.json());
             if(r.status === 'success') {
                 currentUser = u; currentRole = r.role;
                 document.getElementById('login-box').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('u-display').innerText = u;
-                if(r.role === 'admin') { 
-                    document.getElementById('nhap-btn').classList.remove('hidden'); 
-                    document.getElementById('admin-btn').classList.remove('hidden'); 
-                }
+                
+                // HIỆN MÀN HÌNH CHÀO (NEW)
+                document.getElementById('welcome-screen').classList.remove('hidden');
+                
+                // TẢI DỮ LIỆU NGẦM (Lúc này nhân viên đang nhìn màn hình chào)
                 await refreshData(); 
-                openTab('ban-hang');
+                
+                // TẢI XONG -> ẨN MÀN HÌNH CHÀO, HIỆN APP
+                document.getElementById('welcome-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('welcome-screen').classList.add('hidden');
+                    document.getElementById('welcome-screen').style.opacity = '1'; // Reset cho lần sau
+                    document.getElementById('main-app').classList.remove('hidden');
+                    document.getElementById('u-display').innerText = u;
+                    if(r.role === 'admin') { 
+                        document.getElementById('nhap-btn').classList.remove('hidden'); 
+                        document.getElementById('admin-btn').classList.remove('hidden'); 
+                    }
+                    openTab('ban-hang');
+                }, 500); // Đợi 0.5s cho hiệu ứng mờ dần
+
             } else { Swal.fire('Lỗi', 'Sai mật khẩu!', 'error'); btn.disabled = false; }
         } catch(e) { Swal.fire('Lỗi', 'Kết nối thất bại!', 'error'); btn.disabled = false; }
     }
 
+    // --- CÁC HÀM CÒN LẠI GIỮ NGUYÊN ---
     async function refreshData() {
         const resP = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json());
         productRaw = resP.values.sort((a, b) => Number(a[3]) - Number(b[3]));
@@ -142,17 +165,9 @@
                 <button class="btn btn-outline-primary" type="button" onclick="showProductPicker(${id}, '${tab}')">▼</button>
             </div>
             <div class="row g-2">
-                <div class="col-4">
-                    <label class="small text-muted">Số lượng</label>
-                    <input type="number" inputmode="numeric" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="validateOrder('${tab}')">
-                </div>
-                <div class="col-6">
-                    <label class="small text-muted">Đơn giá</label>
-                    <input type="number" inputmode="numeric" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="validateOrder('${tab}')">
-                </div>
-                <div class="col-2 d-flex align-items-end">
-                    <button onclick="document.getElementById('row-${id}').remove();validateOrder('${tab}')" class="btn text-danger fw-bold pb-2">✕</button>
-                </div>
+                <div class="col-4"><label class="small text-muted">SL</label><input type="number" inputmode="numeric" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="validateOrder('${tab}')"></div>
+                <div class="col-6"><label class="small text-muted">Giá</label><input type="number" inputmode="numeric" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="validateOrder('${tab}')"></div>
+                <div class="col-2 d-flex align-items-end"><button onclick="document.getElementById('row-${id}').remove();validateOrder('${tab}')" class="btn text-danger fw-bold pb-2">✕</button></div>
             </div>
             <div id="info-${id}" class="small mt-1 fw-bold text-secondary"></div>
         </div>`;
@@ -161,15 +176,12 @@
     }
 
     function updateDataList() {
-        if(!document.getElementById('plist')) {
-            const dl = document.createElement('datalist'); dl.id = 'plist'; document.body.appendChild(dl);
-        }
+        if(!document.getElementById('plist')) { const dl = document.createElement('datalist'); dl.id = 'plist'; document.body.appendChild(dl); }
         document.getElementById('plist').innerHTML = productRaw.map(v => `<option value="${v[1]}">`).join('');
     }
 
     function showProductPicker(id, tab) {
-        let options = {};
-        productRaw.forEach(p => { options[p[1]] = `${p[1]} (Tồn: ${p[3]})`; });
+        let options = {}; productRaw.forEach(p => { options[p[1]] = `${p[1]} (Tồn: ${p[3]})`; });
         Swal.fire({ title: 'Chọn sản phẩm', input: 'select', inputOptions: options, showCancelButton: true }).then((r) => {
             if (r.value) { document.getElementById(`t-${id}`).value = r.value; updateInfo(id, tab); }
         });
@@ -184,7 +196,7 @@
             infoBox.innerHTML = `📦 Kho: <span id="stock-val-${id}">${p[3]}</span> | Giá cũ: ${Number(p[5]).toLocaleString()}đ`;
             infoBox.classList.remove('text-danger');
         } else {
-            infoBox.innerHTML = (tab === 'ban-hang') ? "❌ Ko có hàng" : "🆕 Sản phẩm mới";
+            infoBox.innerHTML = (tab === 'ban-hang') ? "❌ Ko hàng" : "🆕 SP mới";
             if(tab === 'ban-hang') infoBox.classList.add('text-danger');
         }
         validateOrder(tab);
@@ -194,8 +206,7 @@
         let total = 0, hasError = false;
         document.querySelectorAll('[id^="row-"]').forEach(r => {
             const id = r.id.split('-')[1];
-            const q = Number(document.getElementById(`q-${id}`).value);
-            const p = Number(document.getElementById(`p-${id}`).value);
+            const q = Number(document.getElementById(`q-${id}`).value), p = Number(document.getElementById(`p-${id}`).value);
             const stockEl = document.getElementById(`stock-val-${id}`);
             total += (q * p);
             if (tab === 'ban-hang' && stockEl && q > Number(stockEl.innerText)) hasError = true;
@@ -206,59 +217,29 @@
     }
 
     async function saveOrder(tab) {
-        const nccInput = document.getElementById('order-ncc');
-        const ncc = nccInput.value.trim();
-        const items = [];
-        let checkPrice = true;
+        const nccInput = document.getElementById('order-ncc'), ncc = nccInput.value.trim(), items = [];
+        let checkPrice = true, isNhap = (tab === 'nhap-hang');
 
-        if (tab === 'nhap-hang' && !ncc) {
-            if (navigator.vibrate) navigator.vibrate(200);
-            nccInput.classList.add('input-error');
-            setTimeout(() => nccInput.classList.remove('input-error'), 1000);
-            return Swal.fire('Thiếu NCC', 'Nhập hàng bắt buộc phải điền Nhà Cung Cấp!', 'warning');
-        }
-
+        if (isNhap && !ncc) { if (navigator.vibrate) navigator.vibrate(200); nccInput.classList.add('input-error'); setTimeout(() => nccInput.classList.remove('input-error'), 1000); return Swal.fire('Thiếu NCC', 'Nhập hàng phải điền Nhà Cung Cấp!', 'warning'); }
+        
         document.querySelectorAll('[id^="row-"]').forEach(r => {
-            const id = r.id.split('-')[1];
-            const pInput = document.getElementById(`p-${id}`);
-            const ten = document.getElementById(`t-${id}`).value;
-            const sl = Number(document.getElementById(`q-${id}`).value);
-            const gia = Number(pInput.value);
-            if(ten && sl > 0) {
-                if (gia <= 0) {
-                    checkPrice = false;
-                    pInput.classList.add('input-error');
-                    setTimeout(() => pInput.classList.remove('input-error'), 1000);
-                }
-                items.push({ten, sl, gia});
-            }
+            const id = r.id.split('-')[1], pInp = document.getElementById(`p-${id}`), ten = document.getElementById(`t-${id}`).value, sl = Number(document.getElementById(`q-${id}`).value), gia = Number(pInp.value);
+            if(ten && sl > 0) { if (gia <= 0) { checkPrice = false; pInp.classList.add('input-error'); setTimeout(() => pInp.classList.remove('input-error'), 1000); } items.push({ten, sl, gia}); }
         });
 
-        if(!checkPrice) {
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            return Swal.fire('Lỗi Giá', 'Vui lòng nhập đơn giá lớn hơn 0!', 'error');
-        }
-        if(!items.length) return Swal.fire('Trống', 'Chưa chọn sản phẩm!', 'info');
+        if(!checkPrice) { if (navigator.vibrate) navigator.vibrate([100, 50, 100]); return Swal.fire('Lỗi Giá', 'Vui lòng nhập đơn giá!', 'error'); }
+        if(!items.length) return Swal.fire('Trống', 'Chưa có sản phẩm!', 'info');
 
-        const btn = document.getElementById('btn-save');
-        const oldTxt = btn.innerText;
-        btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ĐANG LƯU...`;
-
+        const btn = document.getElementById('btn-save'), oldTxt = btn.innerText; btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ĐANG LƯU...`;
+        
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: (tab === 'nhap-hang' ? "Nhập hàng" : (tab === 'tra-hang' ? "Trả hàng" : "Bán hàng")), user: currentUser, ncc: ncc || "Khách lẻ", items })}).then(r => r.text());
-            if(res.includes("Success")) {
-                if (navigator.vibrate) navigator.vibrate(50);
-                Swal.fire({icon:'success', title:'Thành công!', timer:800, showConfirmButton:false});
-                await refreshData();
-                nccInput.value = ""; document.getElementById('items-list').innerHTML = "";
-                addOrderRow(tab); validateOrder(tab);
-                btn.disabled = false; btn.innerText = oldTxt;
-            } else { throw new Error(res); }
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: (isNhap ? "Nhập hàng" : (tab === 'tra-hang' ? "Trả hàng" : "Bán hàng")), user: currentUser, ncc: ncc || "Khách lẻ", items })}).then(r => r.text());
+            if(res.includes("Success")) { if (navigator.vibrate) navigator.vibrate(50); Swal.fire({icon:'success', title:'Thành công!', timer:800, showConfirmButton:false}); await refreshData(); nccInput.value = ""; document.getElementById('items-list').innerHTML = ""; addOrderRow(tab); validateOrder(tab); btn.disabled = false; btn.innerText = oldTxt; } else { throw new Error(res); }
         } catch(e) { Swal.fire('Lỗi', 'Thất bại, hãy thử lại!', 'error'); btn.disabled = false; btn.innerText = "THỬ LẠI"; }
     }
 
     function renderStock(c) {
-        c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-primary">📊 KIỂM KHO (TỒN THẤP ĐỨNG ĐẦU)</h5>`;
+        c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-primary">📊 KIỂM KHO (TỒN THẤP ĐẤU ĐẦU)</h5>`;
         c.innerHTML += productRaw.map(p => `
             <div class="card-pro p-3 d-flex justify-content-between align-items-center ${p[3]<5?'border-start border-danger border-5':''}">
                 <div><b class="text-uppercase" style="font-size:0.9rem">${p[1]}</b><br><small class="text-muted">Cập nhật: ${p[7] ? new Date(p[7]).toLocaleDateString('vi-VN') : '---'}</small></div>
@@ -269,19 +250,11 @@
     function renderHistory(c) {
         c.innerHTML = `<h5 class="fw-bold mb-3 text-center text-primary text-uppercase">📜 NHẬT KÝ GIAO DỊCH</h5>`;
         const groups = {};
-        historyRaw.forEach(h => {
-            const oId = h[1];
-            if (!groups[oId]) groups[oId] = { time: h[0], type: h[2], user: h[7], ncc: h[12], items: [], total: 0 };
-            groups[oId].items.push({ ten: h[3], sl: h[4], gia: h[5] });
-            groups[oId].total += Number(h[6] || 0);
-        });
+        historyRaw.forEach(h => { const oId = h[1]; if (!groups[oId]) groups[oId] = { time: h[0], type: h[2], user: h[7], ncc: h[12], items: [], total: 0 }; groups[oId].items.push({ ten: h[3], sl: h[4], gia: h[5] }); groups[oId].total += Number(h[6] || 0); });
         const sorted = Object.keys(groups).sort((a, b) => new Date(groups[b].time) - new Date(groups[a].time));
         if (!sorted.length) { c.innerHTML += `<div class="text-center p-5 text-muted">Chưa có giao dịch</div>`; return; }
         sorted.forEach(oId => {
-            const o = groups[oId];
-            let bCls = "bg-success", bTxt = "BÁN";
-            if (o.type.includes("Nhập")) { bCls = "bg-primary"; bTxt = "NHẬP"; }
-            if (o.type.includes("Trả")) { bCls = "bg-warning text-dark"; bTxt = "TRẢ"; }
+            const o = groups[oId]; let bCls = "bg-success", bTxt = "BÁN"; if (o.type.includes("Nhập")) { bCls = "bg-primary"; bTxt = "NHẬP"; } if (o.type.includes("Trả")) { bCls = "bg-warning text-dark"; bTxt = "TRẢ"; }
             c.innerHTML += `
                 <div class="card-pro mb-2 overflow-hidden shadow-sm" onclick="toggleOrderDetail('${oId}')">
                     <div class="p-3 d-flex justify-content-between align-items-center">
@@ -301,17 +274,12 @@
     function renderFinance(c) {
         let dRev = 0, dCost = 0, dProfit = 0, mRev = 0, mCost = 0, mProfit = 0;
         const now = new Date(), today = now.toLocaleDateString('vi-VN'), m = now.getMonth(), y = now.getFullYear();
-        historyRaw.forEach(h => {
-            if(!h[0]) return;
-            const dt = new Date(h[0]), hRev = (h[2] === 'Bán hàng' ? Number(h[6]) : 0), hCost = Number(h[11] || 0), hProfit = Number(h[10] || 0);
-            if(dt.toLocaleDateString('vi-VN') === today) { dRev += hRev; dCost += hCost; dProfit += hProfit; }
-            if(dt.getMonth() === m && dt.getFullYear() === y) { mRev += hRev; mCost += hCost; mProfit += hProfit; }
-        });
+        historyRaw.forEach(h => { if(!h[0]) return; const dt = new Date(h[0]), hRev = (h[2] === 'Bán hàng' ? Number(h[6]) : 0), hCost = Number(h[11] || 0), hProfit = Number(h[10] || 0); if(dt.toLocaleDateString('vi-VN') === today) { dRev += hRev; dCost += hCost; dProfit += hProfit; } if(dt.getMonth() === m && dt.getFullYear() === y) { mRev += hRev; mCost += hCost; mProfit += hProfit; } });
         c.innerHTML = `
             <h5 class="fw-bold mb-3 text-center text-primary">📊 BÁO CÁO TÀI CHÍNH</h5>
             <div class="card-pro p-3 mb-4 border-top border-primary border-4 shadow-sm">
                 <h6 class="fw-bold text-secondary mb-3 text-center">📅 HÔM NAY (${today})</h6>
-                <div class="row text-center small"><div class="col-4 border-end"><small class="text-muted d-block" style="font-size:0.6rem">DOANH THU</small><b class="text-success">${dRev.toLocaleString()}</b></div><div class="col-4 border-end"><small class="text-muted d-block" style="font-size:0.6rem">GIÁ VỐN</small><b class="text-danger">${dCost.toLocaleString()}</b></div><div class="col-4"><small class="text-muted d-block" style="font-size:0.6rem">LỢI NHUẬN</small><b class="text-primary">${dProfit.toLocaleString()}</b></div></div>
+                <div class="row text-center small"><div class="col-4 border-end"><small class="text-muted d-block text-uppercase" style="font-size:0.6rem">Doanh thu</small><b class="text-success">${dRev.toLocaleString()}</b></div><div class="col-4 border-end"><small class="text-muted d-block text-uppercase" style="font-size:0.6rem">Giá vốn</small><b class="text-danger">${dCost.toLocaleString()}</b></div><div class="col-4"><small class="text-muted d-block text-uppercase" style="font-size:0.6rem">Lợi nhuận</small><b class="text-primary">${dProfit.toLocaleString()}</b></div></div>
             </div>
             <div class="card-pro p-3 bg-dark text-white shadow" style="border-radius:20px">
                 <h6 class="fw-bold mb-3 text-info">📈 TỔNG KẾT THÁNG ${m + 1}/${y}</h6>
