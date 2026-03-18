@@ -72,8 +72,10 @@
     }
 
     async function refreshData() {
-        productRaw = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json());
-        historyRaw = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        const resP = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json());
+        productRaw = resP.values;
+        const resH = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
+        historyRaw = resH.values;
     }
 
     function openTab(name) {
@@ -97,12 +99,10 @@
                     <input type="text" id="order-ncc" class="form-control border-primary fw-bold" placeholder="Nhập tại đây...">
                 </div>
             </div>
-            
             <div id="items-list"></div>
-            
-            <button onclick="addOrderRow()" class="btn btn-outline-secondary w-100 mb-3 btn-main">+ THÊM SẢN PHẨM</button>
-            
+            <button onclick="addOrderRow('${tab}')" class="btn btn-outline-secondary w-100 mb-3 btn-main">+ THÊM SẢN PHẨM</button>
             <div class="card-pro p-3 shadow">
+                <div id="stock-warning" class="alert alert-danger hidden py-2 small fw-bold mb-2">⚠️ Có sản phẩm vượt quá tồn kho!</div>
                 <div class="d-flex justify-content-between mb-3 align-items-center">
                     <span class="fw-bold">TỔNG TIỀN ĐƠN:</span>
                     <h3 class="fw-bold text-danger m-0" id="total-val">0 đ</h3>
@@ -111,45 +111,95 @@
                     ${isBan ? 'XÁC NHẬN BÁN HÀNG' : 'XÁC NHẬN NHẬP HÀNG'}
                 </button>
             </div>`;
-        addOrderRow();
+        addOrderRow(tab);
     }
 
-    function addOrderRow() {
+    function addOrderRow(tab) {
         const id = Date.now();
+        const isBan = (tab === 'ban-hang');
         const h = `<div class="card-pro p-3 border-start border-primary border-4" id="row-${id}">
-            <input list="plist" class="form-control mb-2 fw-bold" placeholder="Gõ tên sản phẩm..." id="t-${id}" onchange="updatePrice(${id})">
+            <input list="plist" class="form-control mb-2 fw-bold" placeholder="Gõ tên sản phẩm..." id="t-${id}" onchange="updateInfo(${id}, '${tab}')">
             <div class="row g-2">
-                <div class="col-4"><small class="text-muted d-block text-center">Số lượng</small><input type="number" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="calcTotal()"></div>
-                <div class="col-6"><small class="text-muted d-block text-center">Đơn giá</small><input type="number" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="calcTotal()"></div>
-                <div class="col-2 pt-4"><button onclick="document.getElementById('row-${id}').remove();calcTotal()" class="btn text-danger fw-bold">✕</button></div>
+                <div class="col-4">
+                    <small class="text-muted d-block text-center">Số lượng</small>
+                    <input type="number" class="form-control text-center fw-bold" id="q-${id}" value="1" oninput="validateOrder('${tab}')">
+                </div>
+                <div class="col-6">
+                    <small class="text-muted d-block text-center">Đơn giá</small>
+                    <input type="number" class="form-control text-center fw-bold text-primary" id="p-${id}" oninput="validateOrder('${tab}')">
+                </div>
+                <div class="col-2 pt-4"><button onclick="document.getElementById('row-${id}').remove();validateOrder('${tab}')" class="btn text-danger fw-bold">✕</button></div>
             </div>
+            <div id="info-${id}" class="small mt-2 fw-bold text-secondary"></div>
         </div>`;
         document.getElementById('items-list').insertAdjacentHTML('beforeend', h);
-        const dl = document.getElementById('plist') || document.body.appendChild(Object.assign(document.createElement('datalist'), {id:'plist'}));
-        dl.innerHTML = productRaw.values.map(v => `<option value="${v[1]}">`).join('');
+        if(!document.getElementById('plist')) {
+            const dl = document.createElement('datalist'); dl.id = 'plist'; document.body.appendChild(dl);
+            dl.innerHTML = productRaw.map(v => `<option value="${v[1]}">`).join('');
+        }
     }
 
-    function updatePrice(id) {
+    function updateInfo(id, tab) {
         const ten = document.getElementById(`t-${id}`).value;
-        const p = productRaw.values.find(x => x[1] === ten);
-        if(p) document.getElementById(`p-${id}`).value = p[5]; 
-        calcTotal();
+        const p = productRaw.find(x => x[1].toString().toLowerCase() === ten.toLowerCase());
+        const infoBox = document.getElementById(`info-${id}`);
+        if(p) {
+            document.getElementById(`p-${id}`).value = p[5]; // Giá bán
+            infoBox.innerHTML = `📦 Tồn kho: <span id="stock-val-${id}">${p[3]}</span> ${p[2]}`;
+            infoBox.classList.remove('text-danger');
+        } else {
+            infoBox.innerHTML = tab === 'ban-hang' ? "❌ Không tìm thấy sản phẩm" : "🆕 Sản phẩm mới";
+            if(tab === 'ban-hang') infoBox.classList.add('text-danger');
+        }
+        validateOrder(tab);
     }
 
-    function calcTotal() {
-        let t = 0;
+    function validateOrder(tab) {
+        let total = 0;
+        let hasError = false;
+        const isBan = (tab === 'ban-hang');
+
         document.querySelectorAll('[id^="row-"]').forEach(r => {
             const id = r.id.split('-')[1];
-            t += (Number(document.getElementById(`q-${id}`).value) * Number(document.getElementById(`p-${id}`).value));
+            const q = Number(document.getElementById(`q-${id}`).value);
+            const p = Number(document.getElementById(`p-${id}`).value);
+            const infoBox = document.getElementById(`info-${id}`);
+            const stockEl = document.getElementById(`stock-val-${id}`);
+            
+            total += (q * p);
+
+            if (isBan && stockEl) {
+                const stockLimit = Number(stockEl.innerText);
+                if (q > stockLimit) {
+                    infoBox.classList.add('text-danger');
+                    infoBox.innerHTML = `⚠️ Vượt quá tồn kho! (Còn ${stockLimit})`;
+                    hasError = true;
+                } else {
+                    infoBox.classList.remove('text-danger');
+                    infoBox.innerHTML = `📦 Tồn kho: <span id="stock-val-${id}">${stockLimit}</span>`;
+                }
+            }
         });
-        document.getElementById('total-val').innerText = t.toLocaleString() + " đ";
+
+        document.getElementById('total-val').innerText = total.toLocaleString() + " đ";
+        const btnSave = document.getElementById('btn-save');
+        const warning = document.getElementById('stock-warning');
+
+        if (isBan && hasError) {
+            btnSave.disabled = true;
+            btnSave.classList.replace('btn-success', 'btn-secondary');
+            warning.classList.remove('hidden');
+        } else {
+            btnSave.disabled = false;
+            btnSave.classList.replace('btn-secondary', isBan ? 'btn-success' : 'btn-primary');
+            warning.classList.add('hidden');
+        }
     }
 
     async function saveOrder(tab) {
         const isBan = (tab === 'ban-hang');
         const ncc = document.getElementById('order-ncc').value.trim();
         const items = [];
-        
         if (!isBan && !ncc) return Swal.fire('Thiếu thông tin', 'Vui lòng nhập tên Nhà Cung Cấp!', 'warning');
 
         document.querySelectorAll('[id^="row-"]').forEach(r => {
@@ -160,53 +210,42 @@
             if(ten && sl > 0) items.push({ten, sl, gia});
         });
 
-        if(!items.length) return Swal.fire('Trống', 'Chưa có sản phẩm nào', 'info');
-
-        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
+        if(!items.length) return;
+        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "ĐANG LƯU...";
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    type: isBan ? 'Bán hàng' : 'Nhập hàng', 
-                    user: currentUser, 
-                    ncc: ncc || (isBan ? "Khách lẻ" : ""), 
-                    items 
-                }) 
-            }).then(r => r.text());
-            
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: isBan?'Bán hàng':'Nhập hàng', user: currentUser, ncc: ncc || (isBan?"Khách lẻ":""), items }) }).then(r => r.text());
             if(res.includes("Success")) {
-                Swal.fire({icon:'success', title:'Thành công!', timer:1200, showConfirmButton:false});
+                Swal.fire({icon:'success', title:'Thành công!', timer:1000, showConfirmButton:false});
                 await refreshData();
                 openTab(tab);
-            } else { Swal.fire('Lỗi', res, 'error'); btn.disabled = false; btn.innerText = "XÁC NHẬN LẠI"; }
-        } catch(e) { Swal.fire('Lỗi', 'Không thể kết nối Server', 'error'); btn.disabled = false; }
+            } else { Swal.fire('Lỗi', res, 'error'); btn.disabled = false; }
+        } catch(e) { Swal.fire('Lỗi', 'Mất kết nối', 'error'); btn.disabled = false; }
     }
 
     function renderStock(c) {
-        c.innerHTML = `<h5 class="fw-bold mb-3">📊 KIỂM KHO</h5>` + productRaw.values.map(p => `
+        c.innerHTML = `<h5 class="fw-bold mb-3">📊 KIỂM KHO</h5>` + productRaw.map(p => `
             <div class="card-pro p-3 d-flex justify-content-between">
-                <div><b class="text-uppercase">${p[1]}</b><br><small class="text-muted">NCC GẦN NHẤT: ${p[6] || '---'}</small></div>
+                <div><b class="text-uppercase">${p[1]}</b><br><small class="text-muted">NCC: ${p[6] || '---'}</small></div>
                 <span class="badge ${p[3]<5?'bg-danger':'bg-success'} rounded-pill pt-2 px-3 h-25">${p[3]} ${p[2]}</span>
             </div>`).join('');
     }
 
     function renderHistory(c) {
-        c.innerHTML = `<h5 class="fw-bold mb-3">📜 NHẬT KÝ</h5>` + [...historyRaw.values].reverse().slice(0,30).map(h => `
+        c.innerHTML = `<h5 class="fw-bold mb-3">📜 NHẬT KÝ</h5>` + [...historyRaw].reverse().slice(0,30).map(h => `
             <div class="card-pro p-3 small">
                 <div class="d-flex justify-content-between text-muted"><span>${h[1]}</span><span>${new Date(h[0]).toLocaleTimeString()}</span></div>
                 <div class="fw-bold text-uppercase my-1">${h[3]} x${h[4]}</div>
                 <div class="d-flex justify-content-between">
-                    <span>Tồn kho sau GD: <b class="${h[9]<5?'text-danger':'text-primary'}">${h[9]}</b></span>
+                    <span>Tồn sau GD: <b class="${h[9]<5?'text-danger':'text-primary'}">${h[9]}</b></span>
                     <b class="${h[2]=='Bán hàng'?'text-success':'text-danger'}">${Math.abs(h[6]).toLocaleString()} đ</b>
                 </div>
-                <div class="text-muted mt-1" style="font-size: 0.75rem;">Đối tác: ${h[12] || '---'}</div>
             </div>`).join('');
     }
 
     function renderFinance(c) {
         let rev = 0, cost = 0, profit = 0;
         const today = new Date().toLocaleDateString();
-        historyRaw.values.forEach(h => {
+        historyRaw.forEach(h => {
             if(new Date(h[0]).toLocaleDateString() === today) {
                 rev += (h[2] === 'Bán hàng' ? Number(h[6]) : 0);
                 cost += Number(h[11] || 0);
@@ -214,9 +253,9 @@
             }
         });
         c.innerHTML = `<h5 class="fw-bold mb-3 text-center">💰 TÀI CHÍNH HÔM NAY</h5>
-            <div class="card-pro p-3 mb-2 border-start border-success border-5"><small>Doanh thu bán hàng</small><div class="text-success stat-val">${rev.toLocaleString()} đ</div></div>
-            <div class="card-pro p-3 mb-2 border-start border-danger border-5"><small>Tiền chi nhập hàng</small><div class="text-danger stat-val">${cost.toLocaleString()} đ</div></div>
-            <div class="card-pro p-3 mb-2 border-start border-primary border-5"><small>Lợi nhuận ước tính</small><div class="text-primary stat-val">${profit.toLocaleString()} đ</div></div>`;
+            <div class="card-pro p-3 mb-2 border-start border-success border-5"><small>Doanh thu</small><div class="text-success stat-val">${rev.toLocaleString()} đ</div></div>
+            <div class="card-pro p-3 mb-2 border-start border-danger border-5"><small>Tiền nhập</small><div class="text-danger stat-val">${cost.toLocaleString()} đ</div></div>
+            <div class="card-pro p-3 mb-2 border-start border-primary border-5"><small>Lợi nhuận</small><div class="text-primary stat-val">${profit.toLocaleString()} đ</div></div>`;
     }
 </script>
 </body>
