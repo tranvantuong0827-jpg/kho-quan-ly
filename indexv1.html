@@ -243,7 +243,8 @@
 
     async function saveOrder(tab) {
         const items = [];
-        const ncc = document.getElementById('order-ncc').value.trim();
+        const nccInput = document.getElementById('order-ncc');
+        const ncc = nccInput.value.trim();
         let typeName = "Bán hàng";
         if (tab === 'nhap-hang') typeName = "Nhập hàng";
         if (tab === 'tra-hang') typeName = "Trả hàng";
@@ -276,9 +277,20 @@
             }).then(r => r.text());
             
             if(res.includes("Success")) {
-                Swal.fire({icon:'success', title:'Thành công!', timer:800, showConfirmButton:false});
+                Swal.fire({icon:'success', title:'Đã lưu đơn!', timer:1000, showConfirmButton:false});
+                
+                // Cập nhật lại dữ liệu ngầm (số tồn kho mới...)
                 await refreshData(); 
-                openTab('lich-su');
+
+                // CHỖ NÀY QUAN TRỌNG: Không nhảy Tab nữa mà chỉ làm sạch Form
+                nccInput.value = ""; // Xóa tên khách/NCC cũ
+                document.getElementById('items-list').innerHTML = ""; // Xóa các dòng hàng cũ
+                addOrderRow(tab); // Thêm lại 1 dòng trống mới để làm tiếp
+                validateOrder(tab); // Reset tổng tiền về 0
+                
+                btn.disabled = false;
+                btn.innerText = (tab === 'ban-hang') ? "XÁC NHẬN BÁN HÀNG" : (tab === 'nhap-hang' ? "XÁC NHẬN NHẬP HÀNG" : "XÁC NHẬN TRẢ HÀNG");
+
             } else { 
                 Swal.fire('Lỗi', res, 'error'); 
                 btn.disabled = false; 
@@ -287,6 +299,7 @@
         } catch(e) { 
             Swal.fire('Lỗi', 'Mất kết nối Internet', 'error'); 
             btn.disabled = false; 
+            btn.innerText = "LƯU LẠI";
         }
     }
 
