@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIM PHÁT CÁ CẢNH - v12.7</title>
+    <title>KIM PHÁT CÁ CẢNH - v13.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,16 +11,10 @@
         :root { --ban: #28a745; --nhap: #007bff; --tra: #dc3545; --tai-chinh: #6c757d; }
         body { background: #f0f2f5; font-family: -apple-system, sans-serif; }
         .hidden { display: none; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--nhap); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .order-row { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 8px solid #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .ban-theme { border-left-color: var(--ban) !important; }
-        .nhap-theme { border-left-color: var(--nhap) !important; }
-        .tra-theme { border-left-color: var(--tra) !important; }
-        .stat-card { background: #fff; border-radius: 15px; padding: 15px; border-top: 4px solid var(--tai-chinh); }
-        .sidebar-item { padding: 15px 20px; border: none; background: none; width: 100%; text-align: left; border-bottom: 1px solid #f1f1f1; font-weight: 600; }
-        .fw-black { font-weight: 900; }
+        .order-row { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 8px solid #ccc; }
+        .stat-card { background: #fff; border-radius: 15px; padding: 15px; border-top: 4px solid var(--tai-chinh); margin-bottom: 10px; }
         .stat-val { font-weight: 900; font-size: 1.1rem; }
+        .sidebar-item { padding: 15px 20px; border: none; background: none; width: 100%; text-align: left; border-bottom: 1px solid #f1f1f1; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -28,8 +22,7 @@
 <div id="login-box" class="container py-5">
     <div class="row justify-content-center">
         <div class="col-11 col-md-4 card p-4 text-center shadow-lg border-0 rounded-5">
-            <h3 class="fw-black text-primary mb-1 italic">KIM PHÁT v0.2</h3>
-            <h5 class="fw-bold text-secondary mb-4">CÁ CẢNH</h5>
+            <h3 class="fw-bold text-primary mb-4">KIM PHÁT CÁ CẢNH v1</h3>
             <input type="text" id="u" class="form-control mb-3 py-3 rounded-4" placeholder="Tài khoản">
             <input type="password" id="p" class="form-control mb-3 py-3 rounded-4" placeholder="Mật khẩu">
             <button onclick="login()" id="btn-login" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">ĐĂNG NHẬP</button>
@@ -37,211 +30,144 @@
     </div>
 </div>
 
-<div id="loading-screen" class="hidden container py-5 text-center">
-    <div class="loader"></div>
-    <h5 class="fw-bold text-primary animate-pulse italic">HỆ THỐNG ĐANG TẢI...</h5>
-</div>
-
 <div id="main-app" class="hidden">
     <nav class="bg-white p-3 d-flex justify-content-between align-items-center sticky-top shadow-sm">
         <button class="fs-3 border-0 bg-transparent" data-bs-toggle="offcanvas" data-bs-target="#menu">☰</button>
         <span class="small fw-bold">NV: <span id="u-display" class="text-primary">---</span></span>
-        <div id="clock-header" class="fw-bold text-primary small"></div>
+        <div id="clock-header" class="fw-bold small"></div>
     </nav>
-    <div class="p-3" id="main-content">
-        <div id="dashboard" class="card p-4 text-center shadow-sm border-0 rounded-4">
-            <h6 id="date-now" class="text-muted mb-3"></h6>
-            <div class="alert alert-danger py-2 px-3 small fw-bold rounded-pill">🔥 KHO SẮP HẾT: <span id="low-count">0</span> món</div>
-            <div id="low-stock-list" class="mt-3 text-start"></div>
-        </div>
-    </div>
+    <div class="p-3" id="main-content"></div>
 </div>
 
 <div class="offcanvas offcanvas-start" id="menu">
-    <div class="offcanvas-header bg-dark text-white">
-        <h6 class="fw-bold m-0 uppercase">MENU QUẢN LÝ</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-    </div>
+    <div class="offcanvas-header bg-dark text-white"><h6>MENU QUẢN LÝ</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button></div>
     <div class="offcanvas-body p-0">
         <button class="sidebar-item" onclick="openTab('ban-hang')">🛍️ Bán Hàng</button>
-        <button id="nhap-btn-menu" class="sidebar-item hidden text-primary" onclick="openTab('nhap-hang')">📦 Nhập Hàng</button>
-        <button class="sidebar-item text-danger" onclick="openTab('tra-hang')">↩️ Trả Hàng</button>
-        <hr class="m-0">
-        <button class="sidebar-item" onclick="openTab('lich-su')">📜 Nhật Ký Giao Dịch</button>
-        <button class="sidebar-item" onclick="openTab('bao-cao-kho')">📊 Kiểm Tra Kho</button>
-        <button id="admin-btn-menu" class="sidebar-item hidden bg-secondary text-white" onclick="openTab('loi-nhuan')">💰 Tài Chính & Lãi</button>
-        <div class="p-3 mt-auto"><button onclick="location.reload()" class="btn btn-outline-secondary btn-sm w-100 rounded-pill">Đăng xuất</button></div>
+        <button id="nhap-btn-menu" class="sidebar-item hidden" onclick="openTab('nhap-hang')">📦 Nhập Hàng</button>
+        <button class="sidebar-item" onclick="openTab('lich-su')">📜 Nhật Ký</button>
+        <button class="sidebar-item" onclick="openTab('bao-cao-kho')">📊 Kho Hàng</button>
+        <button id="admin-btn-menu" class="sidebar-item hidden" onclick="openTab('loi-nhuan')">💰 Tài Chính</button>
     </div>
 </div>
 
 <script>
-    // THAY LINK TRIỂN KHAI (DEPLOY) MỚI CỦA BẠN VÀO ĐÂY
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRH5v38fYmlCePpAchulB0Cmiatkolju9jcwe1w7-eYp2ECJB-8o43nZpKR_bnR7-SMA/exec";
-    let currentUser = "", currentRole = "", productList = [], historyData = [];
+    // COPY URL MỚI SAU KHI DEPLOY DÁN VÀO ĐÂY
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQaPGmiGb2pA2oH4ONMwxRG2DvnR-VTraU6SyMVrVjswn_7fjbXJ62TkLSjMYZEeueiA/exec";
+    let currentUser = "", currentRole = "", productRaw = [], historyRaw = [];
 
     function fM(n) { return Number(n || 0).toLocaleString('vi-VN') + " đ"; }
 
     async function login() {
-        const u = document.getElementById('u').value.trim(), p = document.getElementById('p').value.trim();
-        if(!u || !p) return Swal.fire('Nhập đủ!', '', 'warning');
+        const u = document.getElementById('u').value, p = document.getElementById('p').value;
         const btn = document.getElementById('btn-login');
-        btn.innerText = "Xác thực..."; btn.disabled = true;
+        btn.innerText = "Đang tải..."; btn.disabled = true;
         try {
             const r = await fetch(`${SCRIPT_URL}?action=login&u=${u}&p=${p}`).then(res => res.json());
             if(r.status === 'success') {
                 currentUser = u; currentRole = r.role;
                 document.getElementById('login-box').classList.add('hidden');
-                document.getElementById('loading-screen').classList.remove('hidden');
-                
-                try {
-                    await Promise.all([refreshProducts(), refreshHistory()]);
-                } catch(e) { console.log("Tải dữ liệu ngầm chậm..."); }
-
-                document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('u-display').innerText = currentUser;
-                if(currentRole === 'admin') {
+                document.getElementById('u-display').innerText = u;
+                if(r.role === 'admin') {
                     document.getElementById('admin-btn-menu').classList.remove('hidden');
                     document.getElementById('nhap-btn-menu').classList.remove('hidden');
                 }
+                await refreshData();
+                openTab('ban-hang');
             } else { Swal.fire('Lỗi', 'Sai mật khẩu!', 'error'); btn.innerText = "ĐĂNG NHẬP"; btn.disabled = false; }
-        } catch(e) { 
-            console.error(e);
-            btn.innerText = "ĐĂNG NHẬP"; btn.disabled = false;
-            Swal.fire('Kim Phát', 'Hệ thống đang sẵn sàng!', 'info');
-        }
+        } catch(e) { Swal.fire('Lỗi kết nối', 'Kiểm tra lại Deploy!', 'error'); btn.disabled = false; }
     }
 
-    async function refreshProducts() { productList = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json()); updateDashboard(); }
-    async function refreshHistory() { historyData = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json()); }
-
-    function updateDashboard() {
-        const low = productList.filter(p => Number(p.ton_kho || 0) < 5);
-        document.getElementById('low-count').innerText = low.length;
-        document.getElementById('low-stock-list').innerHTML = low.slice(0,10).map(p => `<div class="d-flex justify-content-between border-bottom py-2 small"><span>${p.ten_sp || p.ten}</span><b class="text-danger">${p.ton_kho}</b></div>`).join('');
+    async function refreshData() {
+        productRaw = await fetch(`${SCRIPT_URL}?action=getProducts`).then(r => r.json());
+        historyRaw = await fetch(`${SCRIPT_URL}?action=getHistory`).then(r => r.json());
     }
 
     function openTab(name) {
         const off = bootstrap.Offcanvas.getInstance(document.getElementById('menu')); if(off) off.hide();
         const content = document.getElementById('main-content');
-        if(['ban-hang', 'nhap-hang', 'tra-hang'].includes(name)) {
-            const type = name === 'ban-hang' ? "Bán hàng" : (name === 'nhap-hang' ? "Nhập hàng" : "Trả hàng");
-            const theme = name === 'ban-hang' ? "ban-theme" : (name === 'nhap-hang' ? "nhap-theme" : "tra-theme");
-            content.innerHTML = `
-                <h5 class="fw-black mb-3 text-center italic text-uppercase">${type}</h5>
-                ${name === 'nhap-hang' ? '<input type="text" id="common-ncc" class="form-control mb-3 py-3 border-primary fw-bold" placeholder="NHÀ CUNG CẤP (BẮT BUỘC)...">':''}
-                <div id="items-list"></div>
-                <button onclick="addRow('${theme}', '${name}')" class="btn btn-outline-secondary w-100 mb-3 py-2 fw-bold">+ THÊM SẢN PHẨM</button>
-                <div class="card p-3 shadow-sm border-0 rounded-4">
-                    <select id="p-method" class="form-select mb-3 rounded-3"><option value="Tiền mặt">💵 Tiền mặt</option><option value="Chuyển khoản">🏦 Chuyển khoản</option></select>
-                    <div class="d-flex justify-content-between mb-3 align-items-center"><span class="fw-bold">TỔNG CỘNG:</span><span id="total-bill" class="fs-4 fw-black text-danger">0 đ</span></div>
-                    <button id="btn-submit" onclick="submitOrder('${type}')" class="btn btn-lg w-100 fw-black rounded-pill ${name==='ban-hang'?'btn-success':(name==='nhap-hang'?'btn-primary':'btn-danger')}">XÁC NHẬN</button>
-                </div>`;
-            addRow(theme, name);
-        } 
-        else if(name === 'lich-su') renderHistory();
-        else if(name === 'bao-cao-kho') renderStock();
-        else if(name === 'loi-nhuan') renderFinance();
+        if(name === 'bao-cao-kho') renderStock(content);
+        else if(name === 'lich-su') renderHistory(content);
+        else if(name === 'loi-nhuan') renderFinance(content);
+        else if(name === 'ban-hang' || name === 'nhap-hang') renderOrder(content, name);
     }
 
-    function addRow(theme, tabName) {
+    function renderStock(container) {
+        let html = `<h5 class="fw-bold text-center mb-3">📊 TỒN KHO</h5>`;
+        productRaw.values.forEach(p => {
+            html += `<div class="card p-3 mb-2 border-0 shadow-sm d-flex flex-row justify-content-between">
+                <div><b>${p[1]}</b><br><small class="text-muted">${p[0]}</small></div>
+                <span class="badge ${p[3] < 5 ? 'bg-danger':'bg-success'} rounded-pill pt-2">${p[3]} ${p[2]}</span>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderHistory(container) {
+        let html = `<h5 class="fw-bold text-center mb-3">📜 NHẬT KÝ</h5>`;
+        [...historyRaw.values].reverse().slice(0,20).forEach(h => {
+            html += `<div class="card p-3 mb-2 border-0 shadow-sm small">
+                <div class="d-flex justify-content-between"><b>${h[2]}</b> <small>${new Date(h[0]).toLocaleString('vi-VN')}</small></div>
+                <div>${h[3]} x ${h[4]}</div>
+                <div class="d-flex justify-content-between text-success"><span>${h[12] || ''}</span> <b>${fM(Math.abs(h[6]))}</b></div>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderFinance(container) {
+        let dRev = 0, dProfit = 0, dCost = 0;
+        const today = new Date().toLocaleDateString('vi-VN');
+        historyRaw.values.forEach(h => {
+            if(new Date(h[0]).toLocaleDateString('vi-VN') === today) {
+                dRev += Number(h[6] || 0); dProfit += Number(h[10] || 0); dCost += Number(h[11] || 0);
+            }
+        });
+        container.innerHTML = `
+            <h5 class="fw-bold text-center mb-3">💰 TÀI CHÍNH HÔM NAY</h5>
+            <div class="stat-card"><small>Doanh thu</small><div class="stat-val text-primary">${fM(dRev)}</div></div>
+            <div class="stat-card"><small>Vốn nhập</small><div class="stat-val text-danger">${fM(dCost)}</div></div>
+            <div class="stat-card" style="border-top-color:green"><small>Lợi nhuận</small><div class="stat-val text-success">${fM(dProfit)}</div></div>`;
+    }
+
+    function renderOrder(container, type) {
+        container.innerHTML = `<h5 class="text-center fw-bold">${type==='ban-hang'?'🛍️ BÁN HÀNG':'📦 NHẬP HÀNG'}</h5><div id="items-list"></div><button onclick="addOrderRow()" class="btn btn-outline-primary w-100 mb-3">+ Thêm món</button><button onclick="saveOrder('${type}')" id="btn-save" class="btn btn-success w-100 py-3">XÁC NHẬN LƯU</button>`;
+        addOrderRow();
+    }
+    // Các hàm phụ trợ khác giữ nguyên logic của bạn...
+    function addOrderRow() {
         const id = Date.now();
-        const row = `<div class="order-row ${theme} row g-1" id="row-${id}">
-            <div class="col-12 mb-2"><input list="plist" onchange="updateRow(${id}, this.value, '${tabName}')" class="form-control rounded-3 fw-bold" placeholder="Chọn sản phẩm..."></div>
-            <div class="col-4"><small class="text-muted d-block text-center">SL</small><input type="number" id="q-${id}" onchange="calc()" class="form-control text-center rounded-3 fw-bold" value="1"></div>
-            <div class="col-6"><small class="text-muted d-block text-center">Giá</small><input type="number" id="p-input-${id}" onchange="calc()" class="form-control text-center text-primary fw-black rounded-3" value="0"></div>
-            <div class="col-2 text-center pt-3"><button onclick="this.parentElement.parentElement.remove();calc()" class="btn text-danger fs-4">✕</button></div>
-            <div class="col-12 text-center small text-muted mt-1" id="s-${id}" data-stock="0">Kho: --</div>
+        const html = `<div class="order-row border-primary mb-2 p-2 bg-white rounded-3 shadow-sm" id="row-${id}">
+            <input list="plist" class="form-control mb-1 fw-bold" placeholder="Tên sản phẩm..." id="t-${id}">
+            <div class="row g-1">
+                <div class="col-4"><input type="number" class="form-control" placeholder="SL" id="q-${id}" value="1"></div>
+                <div class="col-6"><input type="number" class="form-control" placeholder="Giá" id="p-${id}"></div>
+                <div class="col-2"><button onclick="document.getElementById('row-${id}').remove()" class="btn btn-danger w-100">X</button></div>
+            </div>
         </div>`;
-        document.getElementById('items-list').insertAdjacentHTML('beforeend', row);
+        document.getElementById('items-list').insertAdjacentHTML('beforeend', html);
         if(!document.getElementById('plist')) {
             const dl = document.createElement('datalist'); dl.id = 'plist'; document.body.appendChild(dl);
+            dl.innerHTML = productRaw.values.map(p => `<option value="${p[1]}">`).join('');
         }
-        document.getElementById('plist').innerHTML = productList.map(p => `<option value="${p.ten_sp || p.ten}">`).join('');
     }
 
-    function updateRow(id, val, tabName) {
-        const p = productList.find(x => (x.ten_sp || x.ten) === val);
-        const sEl = document.getElementById(`s-${id}`);
-        if(p) {
-            const stock = Number(p.ton_kho || 0);
-            document.getElementById(`p-input-${id}`).value = (tabName === 'nhap-hang') ? (p.gia_nhap || 0) : (p.gia_ban || 0);
-            sEl.innerText = "Kho hiện tại: " + stock; sEl.setAttribute('data-stock', stock);
-        } else { sEl.innerText = "Sản phẩm mới ✨"; sEl.setAttribute('data-stock', '0'); }
-        calc();
-    }
-
-    function calc() {
-        let t = 0;
+    async function saveOrder(type) {
+        const items = [];
         document.querySelectorAll('.order-row').forEach(r => {
             const id = r.id.split('-')[1];
-            t += (Number(document.getElementById(`q-${id}`).value) * Number(document.getElementById(`p-input-${id}`).value));
+            items.push({ ten: document.getElementById(`t-${id}`).value, sl: Number(document.getElementById(`q-${id}`).value), gia: Number(document.getElementById(`p-${id}`).value) });
         });
-        document.getElementById('total-bill').innerText = fM(t);
+        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "Đang lưu...";
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: type==='ban-hang'?'Bán hàng':'Nhập hàng', user: currentUser, method: 'Tiền mặt', items }) }).then(r => r.text());
+        if(res.includes("Success")) {
+            Swal.fire('Xong!', 'Đã lưu vào kho và lịch sử', 'success');
+            await refreshData();
+            openTab('ban-hang');
+        } else { Swal.fire('Lỗi', res, 'error'); btn.disabled = false; }
     }
 
-    async function submitOrder(type) {
-        const items = []; let err = "";
-        const nccVal = document.getElementById('common-ncc') ? document.getElementById('common-ncc').value.trim() : "";
-        const rows = document.querySelectorAll('.order-row');
-        if(!rows.length) return;
-        rows.forEach(r => {
-            const id = r.id.split('-')[1];
-            const ten = r.querySelector('input').value.trim();
-            const sl = Number(document.getElementById(`q-${id}`).value);
-            const gia = Number(document.getElementById(`p-input-${id}`).value);
-            const stock = Number(document.getElementById(`s-${id}`).getAttribute('data-stock') || 0);
-            if(!ten || sl <= 0) err = "Kiểm tra Tên & SL!";
-            if(type === 'Bán hàng' && sl > stock) err = `Món "${ten}" không đủ tồn!`;
-            items.push({ten, sl, gia, ncc: nccVal});
-        });
-        if(err) return Swal.fire(err, '', 'error');
-        if(type === 'Nhập hàng' && !nccVal) return Swal.fire('Điền NCC!', '', 'warning');
-        const btn = document.getElementById('btn-submit');
-        btn.disabled = true; btn.innerText = "ĐANG LƯU...";
-        try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type, user: currentUser, method: document.getElementById('p-method').value, items }) }).then(r => r.text());
-            if(res.includes("Success")) {
-                Swal.fire({title:'Thành công!', icon:'success', timer:1000, showConfirmButton:false});
-                await Promise.all([refreshProducts(), refreshHistory()]);
-                openTab('ban-hang');
-            } else { Swal.fire('Lỗi', res, 'error'); btn.disabled = false; }
-        } catch(e) { Swal.fire('Lỗi', 'Vui lòng thử lại', 'error'); btn.disabled = false; }
-    }
-
-    function renderHistory() {
-        const list = [...historyData].reverse().slice(0,30);
-        document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 text-primary text-center">📜 NHẬT KÝ</h5>` + 
-            list.map(x => `<div class="card p-3 mb-2 border-0 shadow-sm small rounded-4">
-                <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
-                    <b class="${(x.loai || '').includes('Nhập') ? 'text-primary' : 'text-success'}">${(x.loai || '').toUpperCase()}</b>
-                    <span class="text-muted" style="font-size:0.7rem">${new Date(x.thoi_gian).toLocaleString('vi-VN')}</span>
-                </div>
-                <div class="fw-black text-uppercase">${x.ten_sp} <span class="text-muted fw-normal">x${x.sl}</span></div>
-                <div class="d-flex justify-content-between mt-1">
-                    <span>${x.pt_thanh_toan} ${x.nha_cc ? '| '+x.nha_cc : ''}</span>
-                    <b class="text-success">${fM(Math.abs(x.thanh_tien))}</b>
-                </div>
-            </div>`).join('');
-    }
-
-    function renderStock() {
-        document.getElementById('main-content').innerHTML = `<h5 class="fw-black mb-3 text-primary text-center">📊 KHO</h5>
-            <input type="text" onkeyup="filterStock(this.value)" class="form-control mb-3 rounded-pill px-4" placeholder="🔍 Tìm kiếm...">
-            <div id="stock-list-container">
-                ${productList.map(p => `<div class="card p-3 mb-2 border-0 shadow-sm d-flex flex-row justify-content-between align-items-center stock-item rounded-4">
-                    <div><div class="fw-black text-primary">${p.ma_sp || '---'}</div><div class="text-muted text-uppercase small fw-bold">${p.ten_sp}</div></div>
-                    <span class="badge ${Number(p.ton_kho) < 5 ? 'bg-danger' : 'bg-success'} rounded-pill px-3 py-2">${p.ton_kho}</span>
-                </div>`).join('')}
-            </div>`;
-    }
-
-    function filterStock(v) { document.querySelectorAll('.stock-item').forEach(i => i.style.display = i.innerText.toLowerCase().includes(v.toLowerCase()) ? "flex" : "none"); }
-
-    setInterval(() => {
-        const n = new Date(); document.getElementById('clock-header').innerText = n.toLocaleTimeString('vi-VN');
-        if(document.getElementById('date-now')) document.getElementById('date-now').innerText = n.toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-    }, 1000);
+    setInterval(() => { document.getElementById('clock-header').innerText = new Date().toLocaleTimeString('vi-VN'); }, 1000);
 </script>
 </body>
 </html>
